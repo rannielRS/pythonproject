@@ -5,7 +5,7 @@ from config import COLOR_BARRA_SUPERIOR, COLOR_MENU_LATERAL, COLOR_CUERPO_PRINCI
 import util.util_ventana as util_ventana
 import util.util_imagenes as util_img
 # Nuevo
-#from formularios.form_graficas_design import FormularioGraficasDesign
+from formularios.form_registrop_design import FormularioRegistroPDesign
 from formularios.form_sitio_construccion import FormularioSitioConstruccionDesign
 from formularios.form_info_design import FormularioInfoDesign
 
@@ -92,7 +92,7 @@ class FormularioMaestroDesign(tk.Tk):
        
 
         buttons_info = [
-            ("Registrar período", "\uf109", self.buttonDashBoard,self.abrir_panel_graficas ),
+            ("Registrar período", "\uf109", self.buttonDashBoard,self.abrir_registrar_p),
             ("Importar empleados", "\uf007", self.buttonProfile,self.abrir_panel_en_construccion),
             ("Evaluar trabajador", "\uf03e", self.buttonPicture,self.abrir_panel_en_construccion),
             ("Distribuir utilidades", "\uf129", self.buttonInfo,self.abrir_panel_info),
@@ -135,9 +135,9 @@ class FormularioMaestroDesign(tk.Tk):
         else:
             self.menu_lateral.pack(side=tk.LEFT, fill='y')
     # Nuevo
-    def abrir_panel_graficas(self):   
+    def abrir_registrar_p(self):   
         self.limpiar_panel(self.cuerpo_principal)     
-        #FormularioGraficasDesign(self.cuerpo_principal)   
+        FormularioRegistroPDesign(self.cuerpo_principal)   
         
     def abrir_panel_en_construccion(self):   
         self.limpiar_panel(self.cuerpo_principal)     
