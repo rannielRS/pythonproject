@@ -1,32 +1,52 @@
 import tkinter as tk
+import 
 from tkinter import ttk
-from config import COLOR_CUERPO_PRINCIPAL
+from config import COLOR_CUERPO_PRINCIPAL, COLOR_BARRA_SUPERIOR
 
 
 class FormularioRegistroPDesign():
 
     def __init__(self, panel_principal):           
-        # Combo para cargar los periodos del Zun
-        self.marco_trabajo = tk.Frame(
-            panel_principal, bg=COLOR_CUERPO_PRINCIPAL, height=50)
-        self.marco_trabajo.pack(side=tk.TOP,  fill='both')
-
-        self.labelTitulo = tk.Label(self.marco_trabajo, text="Período", bg=COLOR_CUERPO_PRINCIPAL)
-        self.labelTitulo.grid(row=0,column=0,padx=20,pady=20)
-
-        self.cb_periodo = ttk.Combobox(self.marco_trabajo)
-        self.cb_periodo.grid(row=0,column=1,padx=5,pady=20)        
+        # Definiendo controles 
+        self.cbx_label = tk.Label(panel_principal, text="Período", bg=COLOR_CUERPO_PRINCIPAL)
+        self.cbx_label.grid(row=1,column=0,padx=5,pady=20)
+        #comobo carga periodo del zun
+        self.cb_periodo = ttk.Combobox(panel_principal)
+        self.cb_periodo.grid(row=1,column=1,padx=5,pady=20)        
         
+        self.tx_label = tk.Label(panel_principal, text="Trimestre", bg=COLOR_CUERPO_PRINCIPAL)
+        self.tx_label.grid(row=0,column=0,padx=5,pady=20)
+        
+        self.tx_trimestre_name = ttk.Entry(panel_principal, font=(
+            'Times', 14), width=20)
+        self.tx_trimestre_name.grid(row=0,column=1,padx=5,pady=20)
 
-        self.tx_trimestre_name = ttk.Entry(self.marco_trabajo, font=(
-            'Times', 14), state="readonly", width=20)
-        self.tx_trimestre_name.grid(row=0,column=2,padx=5,pady=20)
+        #Boton para agregar periodo al treewiew
+        self.btn_registro_periodo = tk.Button(panel_principal, text="Registrar", font=(
+            'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, padx=15, command="")
+        self.btn_registro_periodo.grid(row=1,column=2,padx=5,pady=20)
+        #self.btn_registro_periodo.bind(
+        #    "<Return>", (lambda event: self.registrar_producto()))
 
-        self.treeview = ttk.Treeview(columns=("size", "lastmod"))
-        self.treeview.heading("#0", text="Mes")
-        self.treeview.heading("size", text="Periodo")
-        self.treeview.heading("lastmod", text="Última modificación")
 
+        #Definiendo tree view de periodo
+
+        self.tree = ttk.Treeview(panel_principal,
+                                 show='headings')
+        self.tree['columns'] = ('Id', 'Periodo', 'Orden')
+        self.tree.column('Id')
+        self.tree.column('Periodo')
+        self.tree.column('Orden')
+
+        self.tree.heading('Id', text='Id')
+        self.tree.heading('Periodo', text='Período')
+        self.tree.heading('Orden', text='Orden')
+        self.tree.grid(row=2,column=0, columnspan=4,padx=20,pady=20)
+
+    def combo(self):   
+         
+        slist = c.fetchall()
+        self.supplier.configure(values=slist)    
 
 
     
