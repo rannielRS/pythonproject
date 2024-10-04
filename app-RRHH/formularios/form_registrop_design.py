@@ -55,9 +55,10 @@ class FormularioRegistroPDesign():
             as_dict=True
             )
             cursor = conn.cursor()
-            # cursor.execute('SELECT * FROM usuario')
-            # slist = cursor.fetchall()
-            # self.cb_periodo.configure(values=slist)
+            cursor.execute('SELECT id_peri, nombre  FROM ZUNpr.dbo.n_periodo')
+            slist = cursor.fetchall()
+            
+            self.cb_periodo['value']=tuple(slist)
         except Exception as err:
             messagebox.showerror("Error",err)
 
