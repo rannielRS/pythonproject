@@ -1,6 +1,6 @@
 import tkinter as tk
-import 
-from tkinter import ttk
+import pymssql
+from tkinter import ttk, messagebox
 from config import COLOR_CUERPO_PRINCIPAL, COLOR_BARRA_SUPERIOR
 
 
@@ -43,10 +43,24 @@ class FormularioRegistroPDesign():
         self.tree.heading('Orden', text='Orden')
         self.tree.grid(row=2,column=0, columnspan=4,padx=20,pady=20)
 
+        self.combo()
+
     def combo(self):   
-         
-        slist = c.fetchall()
-        self.supplier.configure(values=slist)    
+        try:
+            conn = pymssql.connect(
+            server='10.105.213.6',
+            user='userutil',
+            password='1234',
+            database='ZUNpr',
+            as_dict=True
+            )
+            cursor = conn.cursor()
+            # cursor.execute('SELECT * FROM usuario')
+            # slist = cursor.fetchall()
+            # self.cb_periodo.configure(values=slist)
+        except Exception as err:
+            messagebox.showerror("Error",err)
+
 
 
     

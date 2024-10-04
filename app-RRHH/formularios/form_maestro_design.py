@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import font
 from PIL import Image, ImageTk
-from config import COLOR_BARRA_SUPERIOR, COLOR_MENU_LATERAL, COLOR_CUERPO_PRINCIPAL, COLOR_MENU_CURSOR_ENCIMA, COLOR_MENU_LATERAL_UP
+from config import COLOR_BARRA_SUPERIOR, COLOR_MENU_LATERAL,COLOR_CUERPO_PRINCIPAL, COLOR_MENU_CURSOR_ENCIMA
 import util.util_ventana as util_ventana
 import util.util_imagenes as util_img
 # Nuevo
