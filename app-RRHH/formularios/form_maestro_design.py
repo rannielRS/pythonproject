@@ -42,7 +42,7 @@ class FormularioMaestroDesign(tk.Tk):
         
         self.cuerpo_principal = tk.Frame(
             self, bg=COLOR_CUERPO_PRINCIPAL)
-        self.cuerpo_principal.pack(side=tk.RIGHT, fill='both', expand=True)
+        self.cuerpo_principal.pack(side=tk.RIGHT, fill='both', expand=False) 
     
     def controles_barra_superior(self):
         # Configuración de la barra superior

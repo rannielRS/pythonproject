@@ -7,11 +7,13 @@ from config import COLOR_CUERPO_PRINCIPAL, COLOR_BARRA_SUPERIOR
 
 class FormularioRegistroPDesign():
 
-    def __init__(self, panel_principal):           
+    def __init__(self, panel_principal):   
+       
         #Definiendo variables
         self.var_periodo = StringVar()
         self.anno_trim = StringVar()
-        
+        self.opregistrado=[]
+        self.periodoregistrado=[]
         # Definiendo controles 
 
         #comobo carga periodo del zun
@@ -19,6 +21,7 @@ class FormularioRegistroPDesign():
         self.cbx_label.grid(row=1,column=0,padx=5,pady=20)
         
         self.cb_periodo = ttk.Combobox(panel_principal,textvariable=self.var_periodo, postcommand=self.cargarcombo)
+        #self.cb_periodo.current(0)
         self.cb_periodo.grid(row=1,column=1,padx=5,pady=20)  
         
 
@@ -26,9 +29,9 @@ class FormularioRegistroPDesign():
         self.cbx_labelO = tk.Label(panel_principal, text="Orden", bg=COLOR_CUERPO_PRINCIPAL)
         self.cbx_labelO.grid(row=1,column=2,padx=5,pady=20)
         
-        self.cb_orden = ttk.Combobox(panel_principal,postcommand=self.cargarcombo,values=['1','2','3'])
+        self.cb_orden = ttk.Combobox(panel_principal,values=['1','2','3'])
         self.cb_orden.current(0)
-        self.cb_orden.grid(row=1,column=3,padx=5,pady=20) 
+        self.cb_orden.grid(row=1,column=3,padx=5,pady=20)
 
         #nombre del periodo
         self.tx_label = tk.Label(panel_principal, text="Trimestre", bg=COLOR_CUERPO_PRINCIPAL)
@@ -50,9 +53,14 @@ class FormularioRegistroPDesign():
 
         #Boton para agregar periodo al treewiew
         self.btn_registro_periodo = tk.Button(panel_principal, text="Registrar", font=(
-            'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, padx=15, command="")
+            'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, padx=15, command=self.addperiodo)
         self.btn_registro_periodo.grid(row=1,column=4,padx=5,pady=20)
         
+
+        #Boton para crear Trimestre
+        self.btn_save = tk.Button(panel_principal, text="Guargar", font=(
+            'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, padx=15, command=self.save)
+        self.btn_save.grid(row=3,columnspan=4,padx=10,pady=10)
 
 
         #Definiendo tree view de periodo
@@ -68,6 +76,8 @@ class FormularioRegistroPDesign():
         self.tree.heading('Periodo', text='Período')
         self.tree.heading('Orden', text='Orden')
         self.tree.grid(row=2,column=0, columnspan=4,padx=20,pady=20)
+
+        
 
         
 
@@ -97,8 +107,19 @@ class FormularioRegistroPDesign():
         except Exception as err:
             messagebox.showerror("Error",err)
 
-    
+    def addperiodo(self):        
+        periodo = str(self.cb_periodo.get()).split('-')                
+        if self.cb_orden.get() in self.opregistrado or periodo[0] in self.periodoregistrado:
+            messagebox.showwarning('Registro repetido','El período o el orden ya aparece registrado')
+        elif self.cb_periodo.get() == '':
+            messagebox.showwarning('Campo en blanco','Debe seleccionar un período')
+        else:    
+            self.tree.insert('','end',values=(periodo[0],periodo[1],self.cb_orden.get()))
+            self.opregistrado.append(self.cb_orden.get())
+            self.periodoregistrado.append(periodo[0])
+        
 
     
-
+    def save(self):
+        pass
     
