@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import *
 import pymssql
+import psycopg2
 from tkinter import ttk, messagebox
 from config import COLOR_CUERPO_PRINCIPAL, COLOR_BARRA_SUPERIOR
 
@@ -103,9 +104,10 @@ class FormularioRegistroPDesign():
                 options.append(str(row['id_peri'])+"-"+str(row['nombre']).rstrip()+"-"+str(row['fecha_inicio'])[:4])  
 
             self.cb_periodo['value']=options
+            
 
-        except Exception as err:
-            messagebox.showerror("Error",err)
+        except Exception:
+            messagebox.showerror("Error","Problema de conexión con la base de datos")
 
     def addperiodo(self):        
         periodo = str(self.cb_periodo.get()).split('-')                
@@ -121,5 +123,30 @@ class FormularioRegistroPDesign():
 
     
     def save(self):
-        pass
+        trimestre_n=self.tx_trimestre_name.get()
+        anno_t=self.tx_anno.get()
+        periodo_sel=self.cb_periodo.get()
+        try:
+            conn = psycopg2.connect(host="localhost", database="postgres", user="postgres", password="proyecto")
+            cursor = conn.cursor()
+            if trimestre_n =='' or anno_t=='' or periodo_sel=='' or self.periodoregistrado == []:
+                messagebox.showinfo('Campos en blanco','Verifique, existen campos en blanco')
+            else:
+                query="INSERT INTO postgres.public.utilidades_distribucion (name_distribucionu,monto_distribuir,anno) \
+                    VALUES ('"+trimestre_n+"',0,"+anno_t+") RETURNING id "
+                cursor.execute(query)                
+                id_insert_util=str(cursor.fetchone()[0])
+                for item in self.tree.get_children(): 
+                    query1="INSERT INTO postgres.public.periodo (id,mes,ordent)\
+                          VALUES ("+str(self.tree.item(item)['values'][0])+",'"+str(self.tree.item(item)['values'][1])+"',"+str(self.tree.item(item)['values'][2])+")\
+                            RETURNING id"               
+                    cursor.execute(query1)                    
+                    id_insert_periodo=str(cursor.fetchone()[0])
+                    query2="INSERT INTO postgres.public.utilidades_periodo_incluye (upincluye_utilidadesd_id,upincluye_periodo_id,efectuado) VALUES ("+id_insert_util+","+id_insert_periodo+",FALSE)" 
+                    print(query2)
+                    cursor.execute(query2)
+                    conn.commit()
+
+        except Exception as error:
+            messagebox.showerror("Error",error)
     
