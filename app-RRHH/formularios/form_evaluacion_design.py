@@ -85,7 +85,9 @@ class FormularioEvaluacionDesign():
 
             #Treeview        
             columns = ('numero', 'nombreap', 'ci', 'area','mes1','mes2','mes3')
-            self.treeE = ttk.Treeview(panel_principal, height=25, columns=columns, show='headings')
+            self.treeE = ttk.Treeview(panel_principal, height=16, columns=columns, show='headings')
+            self.style = ttk.Style(self.treeE)
+            self.style.configure('Treeview',rowheight=30)
             self.treeE.column('numero',width=80)
             self.treeE.column('nombreap',width=200)
             self.treeE.column('ci',width=110)
