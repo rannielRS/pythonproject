@@ -5,6 +5,7 @@ import psycopg2
 from tkinter import ttk, messagebox
 from config import COLOR_CUERPO_PRINCIPAL, COLOR_BARRA_SUPERIOR
 from PIL import Image, ImageTk
+import openpyxl
 
 
 class FormularioCargarEDesign():
@@ -45,6 +46,11 @@ class FormularioCargarEDesign():
             self.btn_cargar = tk.Button(panel_principal, text="Registrar destajos", font=(
                 'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.guardarListado)
             self.btn_cargar.place(x=840, y=200)
+
+            #Boton para mostrar empleados            
+            self.btn_cargar = tk.Button(panel_principal, text="Exportar listado", font=(
+                'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.mostrarListado)
+            self.btn_cargar.place(x=840, y=250)
 
             #Boton para buscar empleados
             
@@ -229,4 +235,36 @@ class FormularioCargarEDesign():
         queryP='SELECT p.* FROM postgres.public.utilidades_periodo_incluye x INNER JOIN postgres.public.periodo AS p ON x.upincluye_periodo_id = p.id order by p.id asc'
         self.cursorLoc.execute(queryP)
         return self.cursorLoc.fetchall()
+
+    def mostrarListado(self):         
+        path = "file/Listado de trabajadores1.xlsx"
+
+        wb = openpyxl.load_workbook(path)
+
+        sheet = wb.active
+        row = 5
+        for parent in self.treeE.get_children():
+            #Insertar empleados
+            tag=self.treeE.item(parent)["tags"]
+            values=self.treeE.item(parent)["values"]
+            sheet['A'+str(row)]=self.getDepartamento(values[0])
+            sheet['B'+str(row)]=values[0]
+            sheet['C'+str(row)]=values[1]
+            sheet['D'+str(row)]=values[2]
+            sheet['E'+str(row)]=values[3]
+            sheet['F'+str(row)]=values[4]
+            if tag[0] == 'checked':
+                sheet['G'+str(row)]='Si'
+            else:
+                sheet['G'+str(row)]='No'
+
+            row+=1
+
+
+        wb.save(path)
+
+    def getDepartamento(self,idemp):         
+        queryP="SELECT a.area  FROM postgres.public.empleado emp INNER JOIN postgres.public.area AS a ON emp.empleado_area_id  = a.id where emp.id = "+str(idemp)
+        self.cursorLoc.execute(queryP)
+        return self.cursorLoc.fetchone()[0]
     
