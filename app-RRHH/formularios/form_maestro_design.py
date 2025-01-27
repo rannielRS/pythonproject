@@ -6,8 +6,9 @@ import util.util_ventana as util_ventana
 import util.util_imagenes as util_img
 # Nuevo
 from formularios.form_registrop_design import FormularioRegistroPDesign
-from formularios.form_sitio_construccion import FormularioSitioConstruccionDesign
+from formularios.form_evaluacion_design import FormularioEvaluacionDesign
 from formularios.form_info_design import FormularioInfoDesign
+from formularios.form_cargaremp_design import FormularioCargarEDesign
 
 class FormularioMaestroDesign(tk.Tk):
 
@@ -28,7 +29,7 @@ class FormularioMaestroDesign(tk.Tk):
         img = tk.PhotoImage(file="./imagenes/logo1.png")  # Replace "image.png" with any image file.
         self.iconphoto(False, img)
         #self.iconbitmap("./imagenes/logo.ico")
-        w, h = 1024, 600        
+        w, h = 1260, 620        
         util_ventana.centrar_ventana(self, w, h)        
 
     def paneles(self):        
@@ -42,7 +43,7 @@ class FormularioMaestroDesign(tk.Tk):
         
         self.cuerpo_principal = tk.Frame(
             self, bg=COLOR_CUERPO_PRINCIPAL)
-        self.cuerpo_principal.pack(side=tk.RIGHT, fill='both', expand=False) 
+        self.cuerpo_principal.pack(side=tk.LEFT, fill='both', expand=True) 
     
     def controles_barra_superior(self):
         # Configuración de la barra superior
@@ -93,10 +94,10 @@ class FormularioMaestroDesign(tk.Tk):
 
         buttons_info = [
             ("Registrar período", "\uf109", self.buttonDashBoard,self.abrir_registrar_p),
-            ("Importar empleados", "\uf007", self.buttonProfile,self.abrir_panel_en_construccion),
-            ("Evaluar trabajador", "\uf03e", self.buttonPicture,self.abrir_panel_en_construccion),
+            ("Importar empleados", "\uf007", self.buttonProfile,self.abrir_cargarEmp),
+            ("Evaluar trabajador", "\uf03e", self.buttonPicture,self.abrir_evaluacion),
             ("Distribuir utilidades", "\uf129", self.buttonInfo,self.abrir_panel_info),
-            ("Settings", "\uf013", self.buttonSettings,self.abrir_panel_en_construccion)
+            #("Settings", "\uf013", self.buttonSettings,self.abrir_panel_en_construccion)
         ]
 
         for text, icon, button,comando in buttons_info:
@@ -137,11 +138,15 @@ class FormularioMaestroDesign(tk.Tk):
     # Nuevo
     def abrir_registrar_p(self):   
         self.limpiar_panel(self.cuerpo_principal)     
-        FormularioRegistroPDesign(self.cuerpo_principal)   
-        
-    def abrir_panel_en_construccion(self):   
+        FormularioRegistroPDesign(self.cuerpo_principal)
+
+    def abrir_cargarEmp(self):
         self.limpiar_panel(self.cuerpo_principal)     
-        FormularioSitioConstruccionDesign(self.cuerpo_principal,self.img_sitio_construccion) 
+        FormularioCargarEDesign(self.cuerpo_principal)
+        
+    def abrir_evaluacion(self):   
+        self.limpiar_panel(self.cuerpo_principal)     
+        FormularioEvaluacionDesign(self.cuerpo_principal) 
 
     def abrir_panel_info(self):           
         FormularioInfoDesign()                   
