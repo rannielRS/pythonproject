@@ -153,6 +153,7 @@ class FormularioCargarEDesign():
 
         
         return tarifaH
+
     def limpiarEmpArea(self):
         queryDemp = 'DELETE FROM postgres.public.area'
         self.cursorLoc.execute(queryDemp)
@@ -164,7 +165,13 @@ class FormularioCargarEDesign():
         self.treeE.delete(*self.treeE.get_children())
         self.limpiarEmpArea()
         try:            
-            queryEmp='SELECT e1.no_interno,e1.nombre,e1.apell1,e1.apell2,e1.no_expediente,e1.cargo,nuo.descripcion,nuo.id_uorg,ge.iden_grupo_sal FROM ZUNpr.dbo.p_empleado AS e1 INNER JOIN ZUNpr.dbo.n_grupo_escala AS ge ON e1.grupo_escala = ge.id_grupo_sal  INNER JOIN ZUNpr.dbo.n_unidad_org AS nuo ON e1.unidad_org = nuo.id_uorg WHERE e1.fecha_baja IS NULL and e1.activo=1 ORDER BY nuo.id_uorg ASC'
+            queryEmp="SELECT e1.no_interno,e1.nombre,e1.apell1,e1.apell2,e1.no_expediente,e1.cargo,nuo.descripcion,nuo.id_uorg,ge.iden_grupo_sal \
+                FROM ZUNpr.dbo.p_empleado AS e1 INNER JOIN ZUNpr.dbo.nomina_sal AS noms ON e1.no_interno = noms.no_interno \
+                INNER JOIN ZUNpr.dbo.n_grupo_escala AS ge ON e1.grupo_escala = ge.id_grupo_sal  \
+                INNER JOIN ZUNpr.dbo.n_unidad_org AS nuo ON e1.unidad_org = nuo.id_uorg \
+                WHERE noms.id_periodo >= "+str(self.getPeriodo()[0][0])+" AND noms.id_periodo <= "+str(self.getPeriodo()[2][0])+" \
+                GROUP BY e1.no_interno,e1.nombre,e1.apell1,e1.apell2,e1.no_expediente,e1.cargo,nuo.descripcion,nuo.id_uorg,ge.iden_grupo_sal \
+                ORDER BY nuo.id_uorg ASC"
             departamento = ''                      
             #importar empleados            
             self.cursorZun.execute(queryEmp)
@@ -185,7 +192,7 @@ class FormularioCargarEDesign():
                     self.cursorLoc.execute(queryInsertEmp)
                     self.connLoc.commit() 
 
-                    self.treeE.insert('','end',values=("'"+row['no_interno']+"'",row['nombre']+" "+row['apell1']+" "+row['apell2'],row['no_expediente'],row['iden_grupo_sal'].rstrip(),tarifaH),tags='unchecked')
+                    self.treeE.insert('','end',values=("'"+row['no_interno']+"'",row['nombre']+" "+row['apell1']+" "+row['apell2'],"'"+row['no_expediente']+"'",row['iden_grupo_sal'].rstrip(),tarifaH),tags='unchecked')
                 else:
                     continue
             self.cargarDpto()
