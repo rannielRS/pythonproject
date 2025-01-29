@@ -12,6 +12,15 @@ class FormularioCalcUtilidadesDesign():
        
         #Definiendo variables
         # Variables de conexion
+        #Conexion
+        self.connZun = pymssql.connect(
+            server='10.105.213.6',
+            user='userutil',
+            password='1234',
+            database='ZUNpr',
+            as_dict=True)
+        self.cursorZun = self.connZun.cursor()
+
         self.connLoc = psycopg2.connect(
             host="localhost",
             database="postgres",
@@ -26,61 +35,67 @@ class FormularioCalcUtilidadesDesign():
 
             #Boton para buscar empleados        
             self.btn_bempleados = tk.Button(panel_principal, text="Buscar", font=(
-                'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.actualizarTreeE)
+                'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.actualizartreeEUtil)
             self.btn_bempleados.place(x=250, y=2)
+            
+            
+            #Label mostrasr total de registros
+            self.tx_total = tk.Label(panel_principal, font=('Times', 18), bg=COLOR_CUERPO_PRINCIPAL, text='Total de registros: 0')
+            self.tx_total.place(x=750, y=140)
+            
             #Para buscar por departamento
-            #Label area
-            self.tx_area = tk.Label(panel_principal, font=('Times', 14), width=20, bg=COLOR_CUERPO_PRINCIPAL, text='Departamento:')
-            self.tx_area.place(x=350, y=5)
+            #Label departamento
+            self.tx_departamento = tk.Label(panel_principal, font=('Times', 14), width=20, bg=COLOR_CUERPO_PRINCIPAL, text='Departamento:')
+            self.tx_departamento.place(x=350, y=5)
 
             #Combo departamento
-            self.cb_area= ttk.Combobox(panel_principal, width=30)
-            self.cb_area.bind('<<ComboboxSelected>>', self.actualizarTreeE1)
+            self.cb_departamento= ttk.Combobox(panel_principal, width=30)
+            self.cb_departamento.bind('<<ComboboxSelected>>', self.actualizartreeEUtil1)
             #self.cb_periodo.current(0)
-            self.cb_area.place(x=520, y=5)
+            self.cb_departamento.place(x=520, y=5)
 
             #Boton para agregar eva        
             self.btn_agEva = tk.Button(panel_principal, text="Registrar salario", font=(
                 'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.regSal)
-            self.btn_agEva.place(x=800, y=290)
+            self.btn_agEva.place(x=750, y=100)
 
             #Boton para agregar eva        
             self.btn_saveEva = tk.Button(panel_principal, text="Registrar vacaciones", font=(
                 'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.regVac)
-            self.btn_saveEva.place(x=800, y=350)
+            self.btn_saveEva.place(x=750, y=180)
 
             #Boton aprobar evaluaciones        
             self.btn_signEva = tk.Button(panel_principal, text="Mostrar resumen", font=(
                 'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.showResumen)
-            self.btn_signEva.place(x=800, y=410)
+            self.btn_signEva.place(x=750, y=230)
 
                   
             
 
             #Treeview        
             columns = ('numero', 'nombreap', 'ci', 'salario','vacaciones','horast','coef','devengado')
-            self.treeE = ttk.Treeview(panel_principal, height=16, columns=columns, show='headings')
-            self.style = ttk.Style(self.treeE)
+            self.treeEUtil = ttk.Treeview(panel_principal, height=16, columns=columns, show='headings')
+            self.style = ttk.Style(self.treeEUtil)
             self.style.configure('Treeview',rowheight=30)
-            self.treeE.column('numero',width=80)
-            self.treeE.column('nombreap',width=200)
-            self.treeE.column('ci',width=110)
-            self.treeE.column('salario',width=60)
-            self.treeE.column('vacaciones',width=60)
-            self.treeE.column('horast',width=60)
-            self.treeE.column('coef',width=60)
-            self.treeE.column('devengado',width=80)
+            self.treeEUtil.column('numero',width=80)
+            self.treeEUtil.column('nombreap',width=200)
+            self.treeEUtil.column('ci',width=110)
+            self.treeEUtil.column('salario',width=60)
+            self.treeEUtil.column('vacaciones',width=60)
+            self.treeEUtil.column('horast',width=60)
+            self.treeEUtil.column('coef',width=60)
+            self.treeEUtil.column('devengado',width=80)
 
-            self.treeE.heading(column='numero', text='No.')
-            self.treeE.heading(column='nombreap', text='Nombre y apellidos')
-            self.treeE.heading(column='ci', text='CI')
-            self.treeE.heading(column='salario', text='Mt. Sal')
-            self.treeE.heading(column='vacaciones', text='Mt. Vac')
-            self.treeE.heading(column='horast', text='Horas T.')
-            self.treeE.heading(column='coef', text='C. Eva')
-            self.treeE.heading(column='devengado', text='S. Dev')
-            self.treeE.grid(row=1,column=0, columnspan=5,ipadx=5,padx=5,pady=5)
-            self.actualizarTreeE() 
+            self.treeEUtil.heading(column='numero', text='No.')
+            self.treeEUtil.heading(column='nombreap', text='Nombre y apellidos')
+            self.treeEUtil.heading(column='ci', text='CI')
+            self.treeEUtil.heading(column='salario', text='Mt. Sal')
+            self.treeEUtil.heading(column='vacaciones', text='Mt. Vac')
+            self.treeEUtil.heading(column='horast', text='Horas T.')
+            self.treeEUtil.heading(column='coef', text='C. Eva')
+            self.treeEUtil.heading(column='devengado', text='S. Dev')
+            self.treeEUtil.grid(row=1,column=0, columnspan=5,ipadx=5,padx=5,pady=5)
+            self.actualizartreeEUtil() 
             self.cargarDpto()   
         else:
             messagebox.showinfo('Notificación','Debe registrar un período de evaluación')
@@ -88,15 +103,37 @@ class FormularioCalcUtilidadesDesign():
 
     #Definiendo tree view de periodo
     def regSal(self):        
-        pass
-
+        self.treeEUtil.delete(*self.treeEUtil.get_children())         
+        queryEmpL=''
+        countReg = 0
+        if self.tx_empleado.get() != '' and self.cb_departamento.get() == '':
+            queryEmpL="SELECT x.id,x.nombreap,x.ci,a.area FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id where x.nombreap like '%"+self.tx_empleado.get().upper()+"%'"
+        elif self.cb_departamento.get() != '' and self.tx_empleado.get() == '':
+            queryEmpL="SELECT x.id,x.nombreap,x.ci,a.area FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id where a.area = '"+self.cb_departamento.get()+"'"
+        elif self.tx_empleado.get() != '' and self.cb_departamento.get() != '':
+            queryEmpL="SELECT x.id,x.nombreap,x.ci,a.area FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id where x.nombreap like '%"+self.tx_empleado.get().upper()+"%' and a.area = '"+self.cb_departamento.get()+"'"
+        else:
+            queryEmpL='SELECT x.id,x.nombreap,x.ci,a.area FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id'
         
-    def actualizarTreeE(self):
+        self.cursorLoc.execute(queryEmpL)
+        slistEmp = self.cursorLoc.fetchall()            
+        for row in slistEmp:
+            queryGetNom1 = "SELECT x.no_interno,x.deveng_salario,x.pago_2,dias_lab FROM ZUNpr.dbo.nomina_sal x where x.no_interno="+row[0]+" and x.id_periodo="+str(self.getPeriodo()[0][0])
+            self.cursorZun.execute(queryGetNom1)
+            sal_emp=self.cursorZun.fetchone()
+            queryInsertSalLoc = "INSERT INTO postgres.public.pago_salario (sal_devengado,	destajo,	horast,	psalario_empleado_id,	psalario_periodo_id) VALUES("+str(sal_emp['deveng_salario'])+","+str(sal_emp['pago_2'])+","+str(sal_emp['dias_lab'])+","+row[0]+","+str(self.getPeriodo()[0][0])+")"
+            print(queryInsertSalLoc)
+            # self.cursorLoc.execute(queryInsertSalLoc)
+            # self.connLoc.commit()
+            countReg+=1
+
+
+    def actualizartreeEUtil(self):
         pass
 
 
-    def actualizarTreeE1(self,event):
-        self.actualizarTreeE()       
+    def actualizartreeEUtil1(self,event):
+        self.actualizartreeEUtil()       
 
 
 
@@ -108,7 +145,7 @@ class FormularioCalcUtilidadesDesign():
         for row in slistArea:
             options.append(row[1])
         
-        self.cb_area['values']=options
+        self.cb_departamento['values']=options
 
     def getPeriodo(self):         
         queryP='SELECT p.* FROM postgres.public.utilidades_periodo_incluye x INNER JOIN postgres.public.periodo AS p ON x.upincluye_periodo_id = p.id order by p.id asc'
