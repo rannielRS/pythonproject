@@ -27,10 +27,11 @@ class FormularioRegistroPDesign():
         self.var_periodo = StringVar()
         self.anno_trim = StringVar()
         self.periodoregistrado=[]
+        self.registrado = False
         # Definiendo controles 
         
         #comobo carga periodo del zun
-        self.cbx_label = tk.Label(panel_principal, text="Período", bg=COLOR_CUERPO_PRINCIPAL)
+        self.cbx_label = tk.Label(panel_principal, text="Mes", bg=COLOR_CUERPO_PRINCIPAL)
         self.cbx_label.grid(row=1,column=0,padx=5,pady=10)
         
         self.cb_periodo = ttk.Combobox(panel_principal,textvariable=self.var_periodo, postcommand=self.cargarcombo)
@@ -155,6 +156,9 @@ class FormularioRegistroPDesign():
         queryPeriodo = 'SELECT * FROM postgres.public.periodo'               
         self.cursorLoc.execute(queryPeriodo)
         listPeriodo=self.cursorLoc.fetchall()  
+        countResult = len(listPeriodo)
+        if countResult != 0:
+            self.registrado = True
         for row in  listPeriodo:
             self.tree.insert('','end',values=(row[0],row[1],row[3],row[4],row[2]))
             self.periodoregistrado.append(row[0])
@@ -169,6 +173,7 @@ class FormularioRegistroPDesign():
         self.cursorLoc.execute(queryDEmp)
         self.connLoc.commit()
         self.ActualizarTree()
+        self.registrado = False
     
     def save(self):
         trimestre_n=self.tx_trimestre_name.get()
@@ -176,10 +181,8 @@ class FormularioRegistroPDesign():
         periodo_sel=self.cb_periodo.get()
         countElemTree = len(self.tree.get_children())
         if countElemTree == 3:            
-            try:            
-                if trimestre_n =='' or anno_t=='' or periodo_sel=='' or self.periodoregistrado == []:
-                    messagebox.showinfo('Campos en blanco','Verifique, existen campos en blanco')
-                else:
+            try:
+                if self.registrado is False:
                     query="INSERT INTO postgres.public.utilidades_distribucion (name_distribucionu,monto_distribuir,anno) \
                         VALUES ('"+trimestre_n+"',0,"+anno_t+") RETURNING id "
                     self.cursorLoc.execute(query)                
@@ -194,6 +197,10 @@ class FormularioRegistroPDesign():
                         
                         self.cursorLoc.execute(query2)
                         self.connLoc.commit()
+                        self.registrado = True
+                        messagebox.showinfo('Confirmación','El período se registró satisfactoriamente')
+                else:
+                    messagebox.showinfo("Verificando información",'Ya existe un trimestre registrado, reinicie el período si desea iniciar otro trimestre')
 
             except Exception as error:
                 messagebox.showerror("Error",error)
