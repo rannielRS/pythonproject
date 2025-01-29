@@ -224,19 +224,23 @@ class FormularioCargarEDesign():
                 self.treeE.insert('','end',values=("'"+row[0]+"'",row[1],row[2],row[3],row[4],row[6]),tags='checked')
 
     def guardarListado(self):
-        for parent in self.treeE.get_children():
-            #Insertar empleados
-            tag=self.treeE.item(parent)["tags"]
-            values=self.treeE.item(parent)["values"]
-            if tag[0] == 'checked':
-                querySETDestajo = "UPDATE postgres.public.empleado SET destajo=true WHERE id="+str(values[0])
-                self.cursorLoc.execute(querySETDestajo)
-                self.connLoc.commit()
-            else:
-                querySETDestajo = "UPDATE postgres.public.empleado SET destajo=false WHERE id="+str(values[0])
-                #print(querySETDestajo)
-                self.cursorLoc.execute(querySETDestajo)
-                self.connLoc.commit()
+        try:
+            for parent in self.treeE.get_children():
+                #Insertar empleados
+                tag=self.treeE.item(parent)["tags"]
+                values=self.treeE.item(parent)["values"]
+                if tag[0] == 'checked':
+                    querySETDestajo = "UPDATE postgres.public.empleado SET destajo=true WHERE id="+str(values[0])
+                    self.cursorLoc.execute(querySETDestajo)
+                    self.connLoc.commit()
+                else:
+                    querySETDestajo = "UPDATE postgres.public.empleado SET destajo=false WHERE id="+str(values[0])
+                    #print(querySETDestajo)
+                    self.cursorLoc.execute(querySETDestajo)
+                    self.connLoc.commit()
+            messagebox.showinfo('Confirmación','Las evaluaciones se registraron satisfactoriamente')
+        except Exception as error:
+                messagebox.showerror("Error",error)
     
     def getPeriodo(self):         
         queryP='SELECT p.* FROM postgres.public.utilidades_periodo_incluye x INNER JOIN postgres.public.periodo AS p ON x.upincluye_periodo_id = p.id order by p.id asc'

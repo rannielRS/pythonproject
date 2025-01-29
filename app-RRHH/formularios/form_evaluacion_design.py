@@ -4,7 +4,6 @@ import pymssql
 import psycopg2
 from tkinter import ttk, messagebox
 from config import COLOR_CUERPO_PRINCIPAL, COLOR_BARRA_SUPERIOR
-from tkinter import tix
 import openpyxl
 
 class FormularioEvaluacionDesign():
@@ -220,28 +219,31 @@ class FormularioEvaluacionDesign():
         return self.cursorLoc.fetchone()
     
     def salvarEvaluacion(self):
-
-        for parent in self.treeE.get_children():
-            connLoc = psycopg2.connect(
-            host="localhost",
-            database="postgres",
-            user="postgres",
-            password="proyecto") 
-            cursorLoc = connLoc.cursor() 
-            #cursorLoc.execute(queryP)
-            #return cursorLoc.fetchall()
-            listTree=self.treeE.item(parent)["values"]
-            slistP=self.getPeriodo()
-            queryInEvaM1="INSERT INTO postgres.public.evaluacion (evaluacion_empleado_id,evaluacion_tipoevaluacion_id,evaluacion_perio_id) \
-                        VALUES ("+listTree[0]+","+str(self.obtenerTipoEva(listTree[4])[0][0])+","+str(slistP[0][0])+")"
-            queryInEvaM2="INSERT INTO postgres.public.evaluacion (evaluacion_empleado_id,evaluacion_tipoevaluacion_id,evaluacion_perio_id) \
-                        VALUES ("+listTree[0]+","+str(self.obtenerTipoEva(listTree[5])[0][0])+","+str(slistP[1][0])+")"
-            queryInEvaM3="INSERT INTO postgres.public.evaluacion (evaluacion_empleado_id,evaluacion_tipoevaluacion_id,evaluacion_perio_id) \
-                        VALUES ("+listTree[0]+","+str(self.obtenerTipoEva(listTree[6])[0][0])+","+str(slistP[2][0])+")"
-            self.cursorLoc.execute(queryInEvaM1)
-            self.cursorLoc.execute(queryInEvaM2)
-            self.cursorLoc.execute(queryInEvaM3)
-            self.connLoc.commit()
+        try:
+            for parent in self.treeE.get_children():
+                connLoc = psycopg2.connect(
+                host="localhost",
+                database="postgres",
+                user="postgres",
+                password="proyecto") 
+                cursorLoc = connLoc.cursor() 
+                #cursorLoc.execute(queryP)
+                #return cursorLoc.fetchall()
+                listTree=self.treeE.item(parent)["values"]
+                slistP=self.getPeriodo()
+                queryInEvaM1="INSERT INTO postgres.public.evaluacion (evaluacion_empleado_id,evaluacion_tipoevaluacion_id,evaluacion_perio_id) \
+                            VALUES ("+listTree[0]+","+str(self.obtenerTipoEva(listTree[4])[0][0])+","+str(slistP[0][0])+")"
+                queryInEvaM2="INSERT INTO postgres.public.evaluacion (evaluacion_empleado_id,evaluacion_tipoevaluacion_id,evaluacion_perio_id) \
+                            VALUES ("+listTree[0]+","+str(self.obtenerTipoEva(listTree[5])[0][0])+","+str(slistP[1][0])+")"
+                queryInEvaM3="INSERT INTO postgres.public.evaluacion (evaluacion_empleado_id,evaluacion_tipoevaluacion_id,evaluacion_perio_id) \
+                            VALUES ("+listTree[0]+","+str(self.obtenerTipoEva(listTree[6])[0][0])+","+str(slistP[2][0])+")"
+                self.cursorLoc.execute(queryInEvaM1)
+                self.cursorLoc.execute(queryInEvaM2)
+                self.cursorLoc.execute(queryInEvaM3)
+                self.connLoc.commit()
+            messagebox.showinfo('Confirmación','Las evaluaciones se registraron satisfactoriamente')
+        except Exception as error:
+                messagebox.showerror("Error",error)    
 
     
 
@@ -252,9 +254,7 @@ class FormularioEvaluacionDesign():
 
     def signEva(self):         
         path = "file/evaluacion.xlsx"
-
         wb = openpyxl.load_workbook(path)
-
         sheet = wb.active
         row = 3
         sheet['C2']=self.getPeriodo()[0][1]
@@ -265,8 +265,11 @@ class FormularioEvaluacionDesign():
             #Insertar empleados
             sheet['A'+str(row)]=self.getDepartamento(values[0])
             sheet['B'+str(row)]=values[1]
+            sheet['C'+str(row)]=values[4]
+            sheet['D'+str(row)]=values[5]
+            sheet['E'+str(row)]=values[6]
 
             row+=1
-
-
         wb.save(path)
+
+    

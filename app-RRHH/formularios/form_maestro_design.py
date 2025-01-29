@@ -4,17 +4,19 @@ from PIL import Image, ImageTk
 from config import COLOR_BARRA_SUPERIOR, COLOR_MENU_LATERAL,COLOR_CUERPO_PRINCIPAL, COLOR_MENU_CURSOR_ENCIMA
 import util.util_ventana as util_ventana
 import util.util_imagenes as util_img
+
 # Nuevo
 from formularios.form_registrop_design import FormularioRegistroPDesign
 from formularios.form_evaluacion_design import FormularioEvaluacionDesign
 from formularios.form_info_design import FormularioInfoDesign
 from formularios.form_cargaremp_design import FormularioCargarEDesign
+from formularios.form_calculo_utilidades import FormularioCalcUtilidadesDesign
 
 class FormularioMaestroDesign(tk.Tk):
 
     def __init__(self):
         super().__init__()
-        self.logo = util_img.leer_imagen("./imagenes/begin.png", (750, 500))
+        self.logo = util_img.leer_imagen("./imagenes/inicio2.png", (750, 500))
         self.perfil = util_img.leer_imagen("./imagenes/rex.png", (250, 150))
         self.img_sitio_construccion = util_img.leer_imagen("./imagenes/sitio_construccion.png", (200, 200))
         self.config_window()
@@ -96,7 +98,7 @@ class FormularioMaestroDesign(tk.Tk):
             ("Registrar período", "\uf109", self.buttonDashBoard,self.abrir_registrar_p),
             ("Importar empleados", "\uf007", self.buttonProfile,self.abrir_cargarEmp),
             ("Evaluar trabajador", "\uf03e", self.buttonPicture,self.abrir_evaluacion),
-            ("Distribuir utilidades", "\uf129", self.buttonInfo,self.abrir_panel_info),
+            ("Distribuir utilidades", "\uf129", self.buttonInfo,self.abrir_calc_util),
             #("Settings", "\uf013", self.buttonSettings,self.abrir_panel_en_construccion)
         ]
 
@@ -148,10 +150,13 @@ class FormularioMaestroDesign(tk.Tk):
         self.limpiar_panel(self.cuerpo_principal)     
         FormularioEvaluacionDesign(self.cuerpo_principal) 
 
-    def abrir_panel_info(self):           
-        FormularioInfoDesign()                   
+    def abrir_calc_util(self):  
+        self.limpiar_panel(self.cuerpo_principal)          
+        FormularioCalcUtilidadesDesign(self.cuerpo_principal)               
 
     def limpiar_panel(self,panel):
     # Función para limpiar el contenido del panel
         for widget in panel.winfo_children():
             widget.destroy()
+
+    
