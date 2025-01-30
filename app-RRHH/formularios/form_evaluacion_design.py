@@ -220,15 +220,7 @@ class FormularioEvaluacionDesign():
     
     def salvarEvaluacion(self):
         try:
-            for parent in self.treeE.get_children():
-                connLoc = psycopg2.connect(
-                host="localhost",
-                database="postgres",
-                user="postgres",
-                password="proyecto") 
-                cursorLoc = connLoc.cursor() 
-                #cursorLoc.execute(queryP)
-                #return cursorLoc.fetchall()
+            for parent in self.treeE.get_children():  
                 listTree=self.treeE.item(parent)["values"]
                 slistP=self.getPeriodo()
                 queryInEvaM1="INSERT INTO postgres.public.evaluacion (evaluacion_empleado_id,evaluacion_tipoevaluacion_id,evaluacion_perio_id) \

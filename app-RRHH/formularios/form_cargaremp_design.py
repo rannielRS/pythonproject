@@ -192,10 +192,11 @@ class FormularioCargarEDesign():
                     self.cursorLoc.execute(queryInsertEmp)
                     self.connLoc.commit() 
 
-                    self.treeE.insert('','end',values=("'"+row['no_interno']+"'",row['nombre']+" "+row['apell1']+" "+row['apell2'],"'"+row['no_expediente']+"'",row['iden_grupo_sal'].rstrip(),tarifaH),tags='unchecked')
+                    #self.treeE.insert('','end',values=("'"+row['no_interno']+"'",row['nombre']+" "+row['apell1']+" "+row['apell2'],"'"+row['no_expediente']+"'",row['iden_grupo_sal'].rstrip(),tarifaH),tags='unchecked')
                 else:
                     continue
             self.cargarDpto()
+            self.actualizarTreeE()
                     
                 
         except Exception as error:

@@ -102,31 +102,88 @@ class FormularioCalcUtilidadesDesign():
 
 
     #Definiendo tree view de periodo
-    def regSal(self):        
-        self.treeEUtil.delete(*self.treeEUtil.get_children())         
+    def regSal(self):                
         queryEmpL=''
         countReg = 0
-        if self.tx_empleado.get() != '' and self.cb_departamento.get() == '':
-            queryEmpL="SELECT x.id,x.nombreap,x.ci,a.area FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id where x.nombreap like '%"+self.tx_empleado.get().upper()+"%'"
-        elif self.cb_departamento.get() != '' and self.tx_empleado.get() == '':
-            queryEmpL="SELECT x.id,x.nombreap,x.ci,a.area FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id where a.area = '"+self.cb_departamento.get()+"'"
-        elif self.tx_empleado.get() != '' and self.cb_departamento.get() != '':
-            queryEmpL="SELECT x.id,x.nombreap,x.ci,a.area FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id where x.nombreap like '%"+self.tx_empleado.get().upper()+"%' and a.area = '"+self.cb_departamento.get()+"'"
-        else:
-            queryEmpL='SELECT x.id,x.nombreap,x.ci,a.area FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id'
+        self.limpiarNominaLoc()
+        queryEmpL='SELECT x.id,x.nombreap,x.ci,a.area FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id'
         
         self.cursorLoc.execute(queryEmpL)
         slistEmp = self.cursorLoc.fetchall()            
         for row in slistEmp:
-            queryGetNom1 = "SELECT x.no_interno,x.deveng_salario,x.pago_2,dias_lab FROM ZUNpr.dbo.nomina_sal x where x.no_interno="+row[0]+" and x.id_periodo="+str(self.getPeriodo()[0][0])
+            #Cargar nomina del primer mes del periodo
+            queryGetNom1 = "SELECT x.Id_nomina_sal,x.no_interno,x.deveng_salario,x.pago_2,dias_lab FROM ZUNpr.dbo.nomina_sal x where x.no_interno="+row[0]+" and x.id_periodo="+str(self.getPeriodo()[0][0])
             self.cursorZun.execute(queryGetNom1)
             sal_emp=self.cursorZun.fetchone()
-            queryInsertSalLoc = "INSERT INTO postgres.public.pago_salario (sal_devengado,	destajo,	horast,	psalario_empleado_id,	psalario_periodo_id) VALUES("+str(sal_emp['deveng_salario'])+","+str(sal_emp['pago_2'])+","+str(sal_emp['dias_lab'])+","+row[0]+","+str(self.getPeriodo()[0][0])+")"
-            print(queryInsertSalLoc)
-            # self.cursorLoc.execute(queryInsertSalLoc)
-            # self.connLoc.commit()
+            if sal_emp is not None:            
+                queryInsertSalLoc = "INSERT INTO postgres.public.pago_salario (id, sal_devengado,	destajo,	horast,	psalario_empleado_id,	psalario_periodo_id) VALUES("+str(sal_emp['Id_nomina_sal'])+","+str(sal_emp['deveng_salario'])+","+str(sal_emp['pago_2'])+","+str(sal_emp['dias_lab'])+",'"+row[0]+"',"+str(self.getPeriodo()[0][0])+")"
+                self.cursorLoc.execute(queryInsertSalLoc)
+                self.connLoc.commit()
+            #Cargar nomina del segundo mes del periodo
+            queryGetNom1 = "SELECT x.Id_nomina_sal,x.no_interno,x.deveng_salario,x.pago_2,dias_lab FROM ZUNpr.dbo.nomina_sal x where x.no_interno="+row[0]+" and x.id_periodo="+str(self.getPeriodo()[1][0])
+            self.cursorZun.execute(queryGetNom1)
+            sal_emp=self.cursorZun.fetchone()
+            if sal_emp is not None:
+                queryInsertSalLoc = "INSERT INTO postgres.public.pago_salario (id, sal_devengado,	destajo,	horast,	psalario_empleado_id,	psalario_periodo_id) VALUES("+str(sal_emp['Id_nomina_sal'])+","+str(sal_emp['deveng_salario'])+","+str(sal_emp['pago_2'])+","+str(sal_emp['dias_lab'])+",'"+row[0]+"',"+str(self.getPeriodo()[1][0])+")"
+                self.cursorLoc.execute(queryInsertSalLoc)
+                self.connLoc.commit()
+            #Cargar nomina del tercer mes del periodo
+            queryGetNom1 = "SELECT x.Id_nomina_sal,x.no_interno,x.deveng_salario,x.pago_2,dias_lab FROM ZUNpr.dbo.nomina_sal x where x.no_interno="+row[0]+" and x.id_periodo="+str(self.getPeriodo()[2][0])
+            self.cursorZun.execute(queryGetNom1)
+            sal_emp=self.cursorZun.fetchone()
+            if sal_emp is not None:
+                queryInsertSalLoc = "INSERT INTO postgres.public.pago_salario (id, sal_devengado,	destajo,	horast,	psalario_empleado_id,	psalario_periodo_id) VALUES("+str(sal_emp['Id_nomina_sal'])+","+str(sal_emp['deveng_salario'])+","+str(sal_emp['pago_2'])+","+str(sal_emp['dias_lab'])+",'"+row[0]+"',"+str(self.getPeriodo()[2][0])+")"
+                self.cursorLoc.execute(queryInsertSalLoc)
+                self.connLoc.commit()
             countReg+=1
+        self.tx_total['text'] = 'Total de registros: '+str(countReg)
+        messagebox.showinfo('Confirmación','La información de la nómina de salario se registró satisfactoriamente')
 
+    def regVac(self):
+        queryEmpL=''        
+        queryEmpL='SELECT x.id,x.nombreap,x.ci,a.area FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id'
+        
+        self.cursorLoc.execute(queryEmpL)
+        slistEmp = self.cursorLoc.fetchall()            
+        for row in slistEmp:
+            #Cargar nomina del primer mes del periodo
+            queryGetNom1 = "SELECT x.Id_nomina_sal,x.no_interno,x.deveng_salario,x.pago_2,dias_lab FROM ZUNpr.dbo.nomina_sal x where x.no_interno="+row[0]+" and x.id_periodo="+str(self.getPeriodo()[0][0])
+            self.cursorZun.execute(queryGetNom1)
+            sal_emp=self.cursorZun.fetchone()
+            if sal_emp is not None:            
+                queryInsertSalLoc = "INSERT INTO postgres.public.pago_salario (id, sal_devengado,	destajo,	horast,	psalario_empleado_id,	psalario_periodo_id) VALUES("+str(sal_emp['Id_nomina_sal'])+","+str(sal_emp['deveng_salario'])+","+str(sal_emp['pago_2'])+","+str(sal_emp['dias_lab'])+",'"+row[0]+"',"+str(self.getPeriodo()[0][0])+")"
+                print(queryInsertSalLoc)
+                self.cursorLoc.execute(queryInsertSalLoc)
+                self.connLoc.commit()
+            #Cargar nomina del segundo mes del periodo
+            queryGetNom1 = "SELECT x.Id_nomina_sal,x.no_interno,x.deveng_salario,x.pago_2,dias_lab FROM ZUNpr.dbo.nomina_sal x where x.no_interno="+row[0]+" and x.id_periodo="+str(self.getPeriodo()[1][0])
+            self.cursorZun.execute(queryGetNom1)
+            sal_emp=self.cursorZun.fetchone()
+            if sal_emp is not None:
+                queryInsertSalLoc = "INSERT INTO postgres.public.pago_salario (id, sal_devengado,	destajo,	horast,	psalario_empleado_id,	psalario_periodo_id) VALUES("+str(sal_emp['Id_nomina_sal'])+","+str(sal_emp['deveng_salario'])+","+str(sal_emp['pago_2'])+","+str(sal_emp['dias_lab'])+",'"+row[0]+"',"+str(self.getPeriodo()[1][0])+")"
+                print(queryInsertSalLoc)
+                self.cursorLoc.execute(queryInsertSalLoc)
+                self.connLoc.commit()
+            #Cargar nomina del tercer mes del periodo
+            queryGetNom1 = "SELECT x.Id_nomina_sal,x.no_interno,x.deveng_salario,x.pago_2,dias_lab FROM ZUNpr.dbo.nomina_sal x where x.no_interno="+row[0]+" and x.id_periodo="+str(self.getPeriodo()[2][0])
+            self.cursorZun.execute(queryGetNom1)
+            sal_emp=self.cursorZun.fetchone()
+            if sal_emp is not None:
+                queryInsertSalLoc = "INSERT INTO postgres.public.pago_salario (id, sal_devengado,	destajo,	horast,	psalario_empleado_id,	psalario_periodo_id) VALUES("+str(sal_emp['Id_nomina_sal'])+","+str(sal_emp['deveng_salario'])+","+str(sal_emp['pago_2'])+","+str(sal_emp['dias_lab'])+",'"+row[0]+"',"+str(self.getPeriodo()[2][0])+")"
+                print(queryInsertSalLoc)
+                self.cursorLoc.execute(queryInsertSalLoc)
+                self.connLoc.commit()
+        messagebox.showinfo('Confirmación','La información de las vacaciones se registró satisfactoriamente')
+
+    def limpiarNominaLoc(self):
+        queryDemp = 'DELETE FROM postgres.public.pago_salario'
+        self.cursorLoc.execute(queryDemp)
+        self.connLoc.commit()
+
+    def limpiarVacacionesLoc(self):
+        queryDemp = 'DELETE FROM postgres.public.vacacionesp'
+        self.cursorLoc.execute(queryDemp)
+        self.connLoc.commit()
 
     def actualizartreeEUtil(self):
         pass
@@ -158,8 +215,7 @@ class FormularioCalcUtilidadesDesign():
         return self.cursorLoc.fetchall()
    
     
-    def regVac(self):
-        pass
+    
 
     
 
