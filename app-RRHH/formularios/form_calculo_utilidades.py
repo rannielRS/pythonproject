@@ -150,11 +150,11 @@ class FormularioCalcUtilidadesDesign():
             id_inci=self.getVacaInciTrab(row[0],(self.getPeriodo()[0][0]-1))
             if id_inci is not None:            
                 queryVaca = "SELECT v.id_inci,v.tiempo_total,v.importe_total,v.dias_periodo,importe_periodo FROM ZUNpr.dbo.h_vacaciones v \
-                WHERE v.id_inci ="+str(id_inci['id_inci'])
+                WHERE v.id_inci ="+str(id_inci['id_inci'])  
                 self.cursorZun.execute(queryVaca)
                 dataVacaciones = self.cursorZun.fetchone()
                 if dataVacaciones['dias_periodo'] == 0:
-                    queryInsertVacaLoc = "INSERT INTO postgres.public.vacacionesp (id,dias,monto,vacacionesp_empleado_id,vacacionesp_periodo_id,tiempo_tota,	importe_total) \
+                    queryInsertVacaLoc = "INSERT INTO postgres.public.vacacionesp (id,dias,monto,vacacionesp_empleado_id,vacacionesp_periodo_id,tiempo_tota,importe_total) \
                     VALUES("+str(id_inci['id_inci'])+","+str(dataVacaciones['dias_periodo'])+","+str(dataVacaciones['importe_periodo'])+",'"+row[0]+"',"+str((self.getPeriodo()[0][0]-1))+","+str(dataVacaciones['tiempo_total'])+","+str(dataVacaciones['importe_total'])+")"
                     self.cursorLoc.execute(queryInsertVacaLoc)
                     self.connLoc.commit()
@@ -165,7 +165,7 @@ class FormularioCalcUtilidadesDesign():
                 WHERE v.id_inci ="+str(id_inci['id_inci'])
                 self.cursorZun.execute(queryVaca)
                 dataVacaciones = self.cursorZun.fetchone()
-                queryInsertVacaLoc = "INSERT INTO postgres.public.vacacionesp (id,dias,monto,vacacionesp_empleado_id,vacacionesp_periodo_id,tiempo_tota,	importe_total) \
+                queryInsertVacaLoc = "INSERT INTO postgres.public.vacacionesp (id,dias,monto,vacacionesp_empleado_id,vacacionesp_periodo_id,tiempo_tota,importe_total) \
                 VALUES("+str(id_inci['id_inci'])+","+str(dataVacaciones['dias_periodo'])+","+str(dataVacaciones['importe_periodo'])+",'"+row[0]+"',"+str(self.getPeriodo()[0][0])+","+str(dataVacaciones['tiempo_total'])+","+str(dataVacaciones['importe_total'])+")"
                 self.cursorLoc.execute(queryInsertVacaLoc)
                 self.connLoc.commit()
@@ -176,7 +176,7 @@ class FormularioCalcUtilidadesDesign():
                 WHERE v.id_inci ="+str(id_inci['id_inci'])
                 self.cursorZun.execute(queryVaca)
                 dataVacaciones = self.cursorZun.fetchone()
-                queryInsertVacaLoc = "INSERT INTO postgres.public.vacacionesp (id,dias,monto,vacacionesp_empleado_id,vacacionesp_periodo_id,tiempo_tota,	importe_total) \
+                queryInsertVacaLoc = "INSERT INTO postgres.public.vacacionesp (id,dias,monto,vacacionesp_empleado_id,vacacionesp_periodo_id,tiempo_tota,importe_total) \
                 VALUES("+str(id_inci['id_inci'])+","+str(dataVacaciones['dias_periodo'])+","+str(dataVacaciones['importe_periodo'])+",'"+row[0]+"',"+str(self.getPeriodo()[1][0])+","+str(dataVacaciones['tiempo_total'])+","+str(dataVacaciones['importe_total'])+")"
                 self.cursorLoc.execute(queryInsertVacaLoc)
                 self.connLoc.commit()
@@ -187,7 +187,7 @@ class FormularioCalcUtilidadesDesign():
                 WHERE v.id_inci ="+str(id_inci['id_inci'])
                 self.cursorZun.execute(queryVaca)
                 dataVacaciones = self.cursorZun.fetchone()
-                queryInsertVacaLoc = "INSERT INTO postgres.public.vacacionesp (id,dias,monto,vacacionesp_empleado_id,vacacionesp_periodo_id,tiempo_tota,	importe_total) \
+                queryInsertVacaLoc = "INSERT INTO postgres.public.vacacionesp (id,dias,monto,vacacionesp_empleado_id,vacacionesp_periodo_id,tiempo_tota,importe_total) \
                 VALUES("+str(id_inci['id_inci'])+","+str(dataVacaciones['dias_periodo'])+","+str(dataVacaciones['importe_periodo'])+",'"+row[0]+"',"+str(self.getPeriodo()[2][0])+","+str(dataVacaciones['tiempo_total'])+","+str(dataVacaciones['importe_total'])+")"
                 self.cursorLoc.execute(queryInsertVacaLoc)
                 self.connLoc.commit()
@@ -234,7 +234,7 @@ class FormularioCalcUtilidadesDesign():
    
     def getVacaInciTrab(self,no_interno, periodo):
         queryInci = "SELECT x.id_inci FROM ZUNpr.dbo.h_incidencias x \
-        WHERE x.no_interno = '"+no_interno+"' AND x.id_ppago ="+str(periodo)+" AND x.tipo = 4"
+        WHERE x.no_interno = '"+no_interno+"' AND x.id_ppago ="+str(periodo)+" AND x.tipo = 4 AND x.id_padre = 0"
         self.cursorZun.execute(queryInci)
         return self.cursorZun.fetchone()
 
