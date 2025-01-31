@@ -153,7 +153,7 @@ class FormularioRegistroPDesign():
     def ActualizarTree(self):  
         self.periodoregistrado=[]          
         self.tree.delete(*self.tree.get_children())    
-        queryPeriodo = 'SELECT * FROM postgres.public.periodo'               
+        queryPeriodo = 'SELECT p.* FROM postgres.public.utilidades_periodo_incluye x INNER JOIN postgres.public.periodo AS p ON x.upincluye_periodo_id = p.id order by p.id asc'               
         self.cursorLoc.execute(queryPeriodo)
         listPeriodo=self.cursorLoc.fetchall()  
         countResult = len(listPeriodo)
@@ -175,10 +175,20 @@ class FormularioRegistroPDesign():
         self.ActualizarTree()
         self.registrado = False
     
+    def registrarMesAT(self):
+        queryLoc='SELECT p.id FROM postgres.public.periodo AS p order by p.id asc'
+        self.cursorLoc.execute(queryLoc)
+        dataloc = self.cursorLoc.fetchall()
+        dataPeriZun= self.getFullPeriodoZun((dataloc[0][0]-1))
+        queryInsert="INSERT INTO postgres.public.periodo (id,mes,ordent,fechainicio,fechafin)\
+                            VALUES ("+str(dataPeriZun['id_peri'])+",'"+str(dataPeriZun['nombre'].rstrip())+"',"+str(dataPeriZun['orden'])+",'"+str(dataPeriZun['fecha_inicio'])+"','"+str(dataPeriZun['fecha_fin'])+"')"
+        self.cursorLoc.execute(queryInsert)
+        self.connLoc.commit()
+
     def save(self):
         trimestre_n=self.tx_trimestre_name.get()
         anno_t=self.tx_anno.get()
-        periodo_sel=self.cb_periodo.get()
+        #periodo_sel=self.cb_periodo.get()
         countElemTree = len(self.tree.get_children())
         if countElemTree == 3:            
             try:
@@ -198,7 +208,8 @@ class FormularioRegistroPDesign():
                         self.cursorLoc.execute(query2)
                         self.connLoc.commit()
                         self.registrado = True
-                        messagebox.showinfo('Confirmación','El período se registró satisfactoriamente')
+                    self.registrarMesAT()
+                    messagebox.showinfo('Confirmación','El período se registró satisfactoriamente')
                 else:
                     messagebox.showinfo("Verificando información",'Ya existe un trimestre registrado, reinicie el período si desea iniciar otro trimestre')
 

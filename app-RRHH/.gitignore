@@ -1,2 +1,5 @@
+#Cache
 __pycache__/
 formularios/__pycache__/
+#VSCode
+.vscode
