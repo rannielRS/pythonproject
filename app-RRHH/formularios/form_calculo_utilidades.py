@@ -67,9 +67,7 @@ class FormularioCalcUtilidadesDesign():
             #Boton aprobar evaluaciones        
             self.btn_signEva = tk.Button(panel_principal, text="Mostrar resumen", font=(
                 'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.showResumen)
-            self.btn_signEva.place(x=750, y=230)
-
-                  
+            self.btn_signEva.place(x=750, y=230)                 
             
 
             #Treeview        
@@ -96,7 +94,8 @@ class FormularioCalcUtilidadesDesign():
             self.treeEUtil.heading(column='devengado', text='S. Dev')
             self.treeEUtil.grid(row=1,column=0, columnspan=5,ipadx=5,padx=5,pady=5)
             self.actualizartreeEUtil() 
-            self.cargarDpto()   
+            self.cargarDpto() 
+            self.getDestajo('0294',77)  
         else:
             messagebox.showinfo('Notificación','Debe registrar un período de evaluación')
 
@@ -139,15 +138,14 @@ class FormularioCalcUtilidadesDesign():
         self.tx_total['text'] = 'Total de registros: '+str(countReg)
         messagebox.showinfo('Confirmación','La información de la nómina de salario se registró satisfactoriamente')
 
-    def regVac(self):
-        queryEmpL=''        
-        queryEmpL='SELECT x.id,x.nombreap,x.ci,a.area FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id'
+    def regVac(self):               
+        queryEmpL='SELECT id FROM postgres.public.empleado'
         self.limpiarVacacionesLoc()
         self.cursorLoc.execute(queryEmpL)
         slistEmp = self.cursorLoc.fetchall()            
         for row in slistEmp:
             #Cargar vacaciones del mes-1 del periodo            
-            id_inci=self.getVacaInciTrab(row[0],self.getPeriodo1()[0][0])
+            id_inci=self.getVacaInciTrab(row[0],self.getPeriodo1()[0][0]) 
             if id_inci is not None:            
                 queryVaca = "SELECT v.id_inci,v.tiempo_total,v.importe_total,v.dias_periodo,importe_periodo FROM ZUNpr.dbo.h_vacaciones v \
                 WHERE v.id_inci ="+str(id_inci['id_inci'])  
@@ -167,27 +165,39 @@ class FormularioCalcUtilidadesDesign():
                     self.connLoc.commit()
                 
             #Cargar vacaciones del mes 1 del periodo            
-            id_inci=self.getVacaInciTrab(row[0],(self.getPeriodo1()[1][0]))            
+            id_inci=self.getVacaInciTrab(row[0],(self.getPeriodo1()[1][0]))                      
             if id_inci is not None:            
                 queryVaca = "SELECT v.id_inci,v.tiempo_total,v.importe_total,v.dias_periodo,importe_periodo FROM ZUNpr.dbo.h_vacaciones v \
                 WHERE v.id_inci ="+str(id_inci['id_inci'])
                 self.cursorZun.execute(queryVaca)
                 dataVacaciones = self.cursorZun.fetchone()
-                queryInsertVacaLoc = "INSERT INTO postgres.public.vacacionesp (id,dias,monto,vacacionesp_empleado_id,vacacionesp_periodo_id,tiempo_tota,importe_total) \
-                VALUES("+str(id_inci['id_inci'])+","+str(dataVacaciones['dias_periodo'])+","+str(dataVacaciones['importe_periodo'])+",'"+row[0]+"',"+str(self.getPeriodo1()[1][0])+","+str(dataVacaciones['tiempo_total'])+","+str(dataVacaciones['importe_total'])+")"
-                self.cursorLoc.execute(queryInsertVacaLoc)
-                self.connLoc.commit()
+                if dataVacaciones['tiempo_total'] == 0:
+                    queryInsertVacaLoc = "INSERT INTO postgres.public.vacacionesp (id,dias,monto,vacacionesp_empleado_id,vacacionesp_periodo_id,tiempo_tota,importe_total) \
+                    VALUES("+str(id_inci['id_inci'])+","+str(dataVacaciones['dias_periodo'])+","+str(dataVacaciones['importe_periodo'])+",'"+row[0]+"',"+str(self.getPeriodo1()[1][0])+","+str(dataVacaciones['dias_periodo'])+","+str(dataVacaciones['importe_periodo'])+")"
+                    self.cursorLoc.execute(queryInsertVacaLoc)
+                    self.connLoc.commit()
+                else:
+                    queryInsertVacaLoc = "INSERT INTO postgres.public.vacacionesp (id,dias,monto,vacacionesp_empleado_id,vacacionesp_periodo_id,tiempo_tota,importe_total) \
+                    VALUES("+str(id_inci['id_inci'])+","+str(dataVacaciones['dias_periodo'])+","+str(dataVacaciones['importe_periodo'])+",'"+row[0]+"',"+str(self.getPeriodo1()[1][0])+","+str(dataVacaciones['tiempo_total'])+","+str(dataVacaciones['importe_total'])+")"
+                    self.cursorLoc.execute(queryInsertVacaLoc)
+                    self.connLoc.commit()
             #Cargar vacaciones del mes 2 del periodo            
             id_inci=self.getVacaInciTrab(row[0],(self.getPeriodo1()[2][0]))            
-            if id_inci is not None:            
+            if id_inci is not None:   
                 queryVaca = "SELECT v.id_inci,v.tiempo_total,v.importe_total,v.dias_periodo,importe_periodo FROM ZUNpr.dbo.h_vacaciones v \
                 WHERE v.id_inci ="+str(id_inci['id_inci'])
                 self.cursorZun.execute(queryVaca)
-                dataVacaciones = self.cursorZun.fetchone()
-                queryInsertVacaLoc = "INSERT INTO postgres.public.vacacionesp (id,dias,monto,vacacionesp_empleado_id,vacacionesp_periodo_id,tiempo_tota,importe_total) \
-                VALUES("+str(id_inci['id_inci'])+","+str(dataVacaciones['dias_periodo'])+","+str(dataVacaciones['importe_periodo'])+",'"+row[0]+"',"+str(self.getPeriodo1()[2][0])+","+str(dataVacaciones['tiempo_total'])+","+str(dataVacaciones['importe_total'])+")"
-                self.cursorLoc.execute(queryInsertVacaLoc)
-                self.connLoc.commit()
+                dataVacaciones = self.cursorZun.fetchone()         
+                if dataVacaciones['tiempo_total'] == 0:
+                    queryInsertVacaLoc = "INSERT INTO postgres.public.vacacionesp (id,dias,monto,vacacionesp_empleado_id,vacacionesp_periodo_id,tiempo_tota,importe_total) \
+                    VALUES("+str(id_inci['id_inci'])+","+str(dataVacaciones['dias_periodo'])+","+str(dataVacaciones['importe_periodo'])+",'"+row[0]+"',"+str(self.getPeriodo1()[2][0])+","+str(dataVacaciones['dias_periodo'])+","+str(dataVacaciones['importe_periodo'])+")"
+                    self.cursorLoc.execute(queryInsertVacaLoc)
+                    self.connLoc.commit()
+                else:
+                    queryInsertVacaLoc = "INSERT INTO postgres.public.vacacionesp (id,dias,monto,vacacionesp_empleado_id,vacacionesp_periodo_id,tiempo_tota,importe_total) \
+                    VALUES("+str(id_inci['id_inci'])+","+str(dataVacaciones['dias_periodo'])+","+str(dataVacaciones['importe_periodo'])+",'"+row[0]+"',"+str(self.getPeriodo1()[2][0])+","+str(dataVacaciones['tiempo_total'])+","+str(dataVacaciones['importe_total'])+")"
+                    self.cursorLoc.execute(queryInsertVacaLoc)
+                    self.connLoc.commit()
             #Cargar vacaciones del mes 3 del periodo            
             id_inci=self.getVacaInciTrab(row[0],(self.getPeriodo1()[3][0]))            
             if id_inci is not None:                       
@@ -246,12 +256,18 @@ class FormularioCalcUtilidadesDesign():
         return self.cursorLoc.fetchall()
    
     def getVacaInciTrab(self,no_interno, periodo):
-        queryInci = "SELECT x.id_inci FROM ZUNpr.dbo.h_incidencias x \
-        WHERE x.no_interno = '"+no_interno+"' AND x.id_ppago ="+str(periodo)+" AND x.tipo = 4 AND x.id_padre = 0"
-        self.cursorZun.execute(queryInci)
-        return self.cursorZun.fetchone()
+        queryNomina = "SELECT no_interno FROM ZUNpr.dbo.nomina_vac WHERE id_periodo = "+str(periodo)+" AND no_interno = "+no_interno+" AND deveng_vac != 0"
+        self.cursorZun.execute(queryNomina)        
+        idEmplwNom = self.cursorZun.fetchone()
+        if idEmplwNom is not None:
+            queryInci = "SELECT x.id_inci,x.id_padre FROM ZUNpr.dbo.h_incidencias x \
+            WHERE x.no_interno = '"+no_interno+"' AND x.id_ppago ="+str(periodo)+" AND x.tipo = 4 ORDER BY x.id_inci DESC"
+            self.cursorZun.execute(queryInci)
+            result = self.cursorZun.fetchone()
+            if result is not None:
+                if result['id_padre']==0:
+                    return result
 
-    
 
     
 
@@ -261,21 +277,30 @@ class FormularioCalcUtilidadesDesign():
         return self.cursorLoc.fetchone()[0]
 
     def showResumen(self): 
-        pass        
-        # queryEmpL=''        
-        # queryEmpL='SELECT x.id,x.nombreap,x.ci,a.area, FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id'
-        
-        # self.cursorLoc.execute(queryEmpL)
-        # slistEmp = self.cursorLoc.fetchall()            
-        # for row in slistEmp:
-            
-        # messagebox.showinfo('Confirmación','La información de las vacaciones se registró satisfactoriamente')
+        querygetSal="SELECT x.* FROM postgres.public.pago_salario x"
 
-    def getpagoSalMT(self, empleado, periodo):
-        pass
+    def getpagoSalMT(self, empleado):
+        mtsalario = 0
+        querygetSal="SELECT ps.destajo FROM postgres.public.utilidades_periodo_incluye up \
+        INNER JOIN postgres.public.pago_salario AS ps ON up.upincluye_periodo_id = ps.psalario_periodo_id where ps.psalario_empleado_id  = '"+empleado+"'"
+        self.cursorLoc.execute(querygetSal)
+        salarioList = self.cursorLoc.fetchall()
+        for sal in salarioList:
+            mtsalario += sal[0]
+
+        return mtsalario
+
 
     def getVacacionesMT(self, empleado):
         pass
+
+    def getDestajo(self,empleado,periodo):
+        querygetSal="SELECT ps.destajo,e.thoraria FROM postgres.public.pago_salario AS ps INNER JOIN postgres.public.empleado AS e \
+            ON ps.psalario_empleado_id = e.id where ps.psalario_empleado_id  = '"+empleado+"' AND ps.psalario_periodo_id = "+str(periodo)
+        self.cursorLoc.execute(querygetSal)
+        result = self.cursorLoc.fetchone()
+        return result
+
 
     
 
