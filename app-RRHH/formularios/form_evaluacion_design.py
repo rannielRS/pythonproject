@@ -140,7 +140,7 @@ class FormularioEvaluacionDesign():
 
         slistEmp = self.cursorLoc.fetchall()            
         for row in slistEmp:
-            evames1=evames2=evames3='NE'          
+            evames1=evames2=evames3='B'          
             if self.obtenerEvaCond(row[0],self.getPeriodo()[0][0]) != None:
                 evames1 = self.obtenerEvaCond(row[0],self.getPeriodo()[0][0])[0]                 
             if self.obtenerEvaCond(row[0],self.getPeriodo()[1][0]) != None:

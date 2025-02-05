@@ -239,7 +239,7 @@ class FormularioCargarEDesign():
                     #print(querySETDestajo)
                     self.cursorLoc.execute(querySETDestajo)
                     self.connLoc.commit()
-            messagebox.showinfo('Confirmación','Las evaluaciones se registraron satisfactoriamente')
+            messagebox.showinfo('Confirmación','Los destajos se registraron satisfactoriamente')
         except Exception as error:
                 messagebox.showerror("Error",error)
     

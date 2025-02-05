@@ -95,7 +95,7 @@ class FormularioCalcUtilidadesDesign():
             self.treeEUtil.grid(row=1,column=0, columnspan=5,ipadx=5,padx=5,pady=5)
             self.actualizartreeEUtil() 
             self.cargarDpto() 
-            self.getDestajo('0294',77)  
+            print(self.getVacacionesMT('0091'))
         else:
             messagebox.showinfo('Notificación','Debe registrar un período de evaluación')
 
@@ -105,7 +105,7 @@ class FormularioCalcUtilidadesDesign():
         queryEmpL=''
         countReg = 0
         self.limpiarNominaLoc()
-        queryEmpL='SELECT x.id,x.nombreap,x.ci,a.area FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id'
+        queryEmpL='SELECT id FROM postgres.public.empleado'
         
         self.cursorLoc.execute(queryEmpL)
         slistEmp = self.cursorLoc.fetchall()            
@@ -225,11 +225,6 @@ class FormularioCalcUtilidadesDesign():
     def actualizartreeEUtil(self):
         pass
 
-
-       
-
-
-
     def cargarDpto(self):
         options=[]         
         queryP='SELECT x.* FROM postgres.public.area x order by area asc'
@@ -266,10 +261,7 @@ class FormularioCalcUtilidadesDesign():
             result = self.cursorZun.fetchone()
             if result is not None:
                 if result['id_padre']==0:
-                    return result
-
-
-    
+                    return result    
 
     def getDepartamento(self,idemp):         
         queryP="SELECT a.area  FROM postgres.public.empleado emp INNER JOIN postgres.public.area AS a ON emp.empleado_area_id  = a.id where emp.id = "+str(idemp)
@@ -280,23 +272,40 @@ class FormularioCalcUtilidadesDesign():
         querygetSal="SELECT x.* FROM postgres.public.pago_salario x"
 
     def getpagoSalMT(self, empleado):
-        mtsalario = 0
-        querygetSal="SELECT ps.destajo FROM postgres.public.utilidades_periodo_incluye up \
-        INNER JOIN postgres.public.pago_salario AS ps ON up.upincluye_periodo_id = ps.psalario_periodo_id where ps.psalario_empleado_id  = '"+empleado+"'"
+        mtsalario = []
+        querygetSal="SELECT ps.sal_devengado,ps.destajo FROM postgres.public.utilidades_periodo_incluye up \
+        INNER JOIN postgres.public.pago_salario AS ps ON up.upincluye_periodo_id = ps.psalario_periodo_id where ps.psalario_empleado_id  = '"+empleado+"' order by up.upincluye_periodo_id asc" 
         self.cursorLoc.execute(querygetSal)
         salarioList = self.cursorLoc.fetchall()
         for sal in salarioList:
-            mtsalario += sal[0]
+            mtsalario.append(sal[0] - sal[1])
 
         return mtsalario
 
 
     def getVacacionesMT(self, empleado):
-        pass
+        mtvacaciones = []
+        querygetVaca="SELECT v.tiempo_tota,p.id  FROM postgres.public.periodo p \
+        INNER JOIN postgres.public.vacacionesp AS v ON p.id = v.vacacionesp_periodo_id where v.vacacionesp_empleado_id  = '"+empleado+"' order by p.id asc" 
+        self.cursorLoc.execute(querygetVaca)
+        vacacionesList = self.cursorLoc.fetchall()
+        for vac in vacacionesList:
+            if self.getDestajo(empleado)[1]:
+                importe=float(vac[0])
+                tarifaH=float(self.getDestajo(empleado)[0])
+                calcVaca = importe*tarifaH*8
+                mtvacaciones.append((calcVaca, vac[1]))
+            else:
+                mtvacaciones.append((vac[0], vac[1]))
+        return mtvacaciones
 
-    def getDestajo(self,empleado,periodo):
-        querygetSal="SELECT ps.destajo,e.thoraria FROM postgres.public.pago_salario AS ps INNER JOIN postgres.public.empleado AS e \
-            ON ps.psalario_empleado_id = e.id where ps.psalario_empleado_id  = '"+empleado+"' AND ps.psalario_periodo_id = "+str(periodo)
+        
+
+        
+
+    def getDestajo(self,empleado):
+        querygetSal="SELECT e.thoraria,e.destajo FROM postgres.public.empleado AS e \
+            where e.id  = '"+empleado+"'"
         self.cursorLoc.execute(querygetSal)
         result = self.cursorLoc.fetchone()
         return result
