@@ -28,7 +28,9 @@ class FormularioCalcUtilidadesDesign():
             password="proyecto") 
         self.cursorLoc = self.connLoc.cursor()
         if self.getPeriodo():
-            
+            #variablesde estado
+            self.registro_salario = False
+            self.registro_vacaciones = False
             # Definiendo controles de seleccion
             self.tx_empleado = ttk.Entry(panel_principal, font=('Times', 14), width=10)
             self.tx_empleado.grid(row=0,column=0,padx=5,pady=5,ipadx=40)
@@ -95,7 +97,8 @@ class FormularioCalcUtilidadesDesign():
             self.treeEUtil.grid(row=1,column=0, columnspan=5,ipadx=5,padx=5,pady=5)
             self.actualizartreeEUtil() 
             self.cargarDpto() 
-            print(self.getVacacionesMT('0091'))
+            self.resumendetallemin()
+            #print(self.getVacacionesMT('0091'))
         else:
             messagebox.showinfo('Notificación','Debe registrar un período de evaluación')
 
@@ -136,6 +139,7 @@ class FormularioCalcUtilidadesDesign():
                 self.connLoc.commit()
             countReg+=1
         self.tx_total['text'] = 'Total de registros: '+str(countReg)
+        self.registro_salario = True
         messagebox.showinfo('Confirmación','La información de la nómina de salario se registró satisfactoriamente')
 
     def regVac(self):               
@@ -210,6 +214,7 @@ class FormularioCalcUtilidadesDesign():
                     VALUES("+str(id_inci['id_inci'])+","+str(dataVacaciones['dias_periodo'])+","+str(dataVacaciones['importe_periodo'])+",'"+row[0]+"',"+str(self.getPeriodo1()[3][0])+","+str(dataVacaciones['dias_periodo'])+","+str(dataVacaciones['importe_periodo'])+")"
                     self.cursorLoc.execute(queryInsertVacaLoc)
                     self.connLoc.commit()
+        self.registro_vacaciones = True
         messagebox.showinfo('Confirmación','La información de las vacaciones se registró satisfactoriamente')
 
     def limpiarNominaLoc(self):
@@ -223,7 +228,24 @@ class FormularioCalcUtilidadesDesign():
         self.connLoc.commit()
 
     def actualizartreeEUtil(self):
-        pass
+        self.treeEUtil.delete(*self.treeEUtil.get_children())         
+        queryEmpL=''
+        if self.tx_empleado.get() != '' and self.cb_departamento.get() == '':
+            queryEmpL="SELECT x.id,x.nombreap,x.ci,rc.mtsalario,rc.mtvacaciones,rc.horastt,rc.coeficienteeva_utilidades,rc.devengado FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.id = a.id INNER JOIN postgres.public.resumen_calculo AS rc ON x.id = rc.resumen_empleado_id where x.nombreap like '%"+self.tx_empleado.get().upper()+"%' ORDER BY a.id ASC"
+        elif self.cb_departamento.get() != '' and self.tx_empleado.get() == '':
+            queryEmpL="SELECT x.id,x.nombreap,x.ci,rc.mtsalario,rc.mtvacaciones,rc.horastt,rc.coeficienteeva_utilidades,rc.devengado FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id INNER JOIN postgres.public.resumen_calculo_utilidades AS rc ON x.id = rc.resumen_empleado_id where a.area = '"+self.cb_departamento.get()+"' ORDER BY a.id ASC"
+        elif self.tx_empleado.get() != '' and self.cb_departamento.get() != '':
+            queryEmpL="SELECT x.id,x.nombreap,x.ci,rc.mtsalario,rc.mtvacaciones,rc.horastt,rc.coeficienteeva_utilidades,rc.devengado FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id INNER JOIN postgres.public.resumen_calculo_utilidades AS rc ON x.id = rc.resumen_empleado_id where x.nombreap like '%"+self.tx_empleado.get().upper()+"%' and a.area = '"+self.cb_departamento.get()+"' ORDER BY a.id ASC"
+        else:
+            queryEmpL='SELECT x.id,x.nombreap,x.ci,rc.mtsalario,rc.mtvacaciones,rc.horastt,rc.coeficienteeva_utilidades,rc.devengado FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id INNER JOIN postgres.public.resumen_calculo_utilidades AS rc ON x.id = rc.resumen_empleado_id ORDER BY a.id ASC'
+               
+        self.cursorLoc.execute(queryEmpL)
+
+        slistEmp = self.cursorLoc.fetchall()       
+        for row in slistEmp:
+            self.treeEUtil.insert('','end',values=("'"+row[0]+"'",row[1],row[2],row[3],row[4],row[5],row[5]))
+        self.tx_total['text'] = 'Total de registros: '+str(len(self.treeEUtil.get_children()))
+            
 
     def cargarDpto(self):
         options=[]         
@@ -269,23 +291,139 @@ class FormularioCalcUtilidadesDesign():
         return self.cursorLoc.fetchone()[0]
 
     def showResumen(self): 
-        querygetSal="SELECT x.* FROM postgres.public.pago_salario x"
+        queryP="SELECT emp.id,emp.nombreap,emp.ci,a.area  FROM postgres.public.empleado emp INNER JOIN postgres.public.area AS a ON emp.empleado_area_id  = a.id"
+        self.cursorLoc.execute(queryP)
+        empList = self.cursorLoc.fetchall()
+        for emp in empList:
+            mtvacaciones = 0
+            mtsalario = 0
+            horast = 0
+            listSal = self.getpagoSalMT(emp[0])
+            listVaca = self.getVacacionesMT(emp[0])
+            for rowsal in listSal:
+                mtsalario += rowsal[0]
+                horast += rowsal[1]
+            for rowvaca in listVaca:
+                mtvacaciones += rowvaca[0]
+            queryInsertRe = "INSERT INTO postgres.public.resumen_calculo_utilidades\
+                (resumen_empleado_id,resumen_utilidadesd_id,mtvacaciones,mtsalario,horastt,coeficienteeva_utilidades,descrip_coeficiente,devengado)\
+                    VALUES ('"+emp[0]+"',"+str(self.getUtiliDist()[0])+","+str(round(mtvacaciones,2))+","+str(round(mtsalario,2))+","+str(horast)+","+str(self.calcCoeficienteEva(emp[0]))+",'',"+str(round((mtsalario+mtvacaciones)))+")"
+            self.cursorLoc.execute(queryInsertRe)
+            self.connLoc.commit()
+        self.actualizartreeEUtil()
+
+    #Obtener informacion del Periodo de utilidades definido        
+    def getUtiliDist(self):
+        queryUD="SELECT x.* FROM postgres.public.utilidades_distribucion x"
+        self.cursorLoc.execute(queryUD)
+        return self.cursorLoc.fetchone()        
+
+    def calcCoeficienteEva(self, emp):
+        listPer = self.getPeriodo()
+        sumeva = 0
+        countDiv = len(listPer)
+        for periodo in listPer:
+            queryEva = "SELECT te.peso FROM postgres.public.tipo_evaluacion te \
+            INNER JOIN postgres.public.evaluacion AS e ON te.id = e.evaluacion_tipoevaluacion_id WHERE e.evaluacion_perio_id="\
+            +str(periodo[0])+" AND e.evaluacion_empleado_id = '"+emp+"'"
+            self.cursorLoc.execute(queryEva)
+            eva = self.cursorLoc.fetchone()
+            if eva is not None:
+                if eva[0] == 0:
+                    countDiv -= 1
+                else:
+                    sumeva += eva[0]
+            else:
+                messagebox.showinfo('Notificación','No tiene registro de evaluación en el mes de '+str(periodo[1]))
+        return sumeva/countDiv
+
+    def resumendetallemin(self):
+        path = "file/resumen_detalle_min.xlsx"
+        row = 3 
+        controw = 1
+        self.limpiarExcel(row,path)   
+        wb = openpyxl.load_workbook(path)
+        sheet = wb.active
+             
+        queryP="SELECT a.area,emp.id,emp.ci,emp.nombreap,emp.escalas,emp.thoraria  FROM postgres.public.empleado emp INNER JOIN postgres.public.area AS a ON emp.empleado_area_id  = a.id ORDER BY a.id"
+        self.cursorLoc.execute(queryP)
+        listEmp = self.cursorLoc.fetchall()
+        for empleado in listEmp:
+            sheet['B'+str(row)] =  controw
+            sheet['C'+str(row)] =  empleado[1]
+            sheet['D'+str(row)] =  empleado[2]
+            sheet['E'+str(row)] =  empleado[3]
+            sheet['F'+str(row)] =  empleado[4]
+            sheet['G'+str(row)] =  empleado[5]
+            if self.getDestajo(empleado[1])[1]:
+                sheet['H'+str(row)] =  'Si'
+            else:
+                sheet['H'+str(row)] =  'No'
+            vacaciones = self.getVacacionesMT(empleado[1])
+            for v in vacaciones:
+                idsperiodos =  []
+                periodos = list(self.getPeriodo())
+                idsperiodos.append(periodos[0][0])
+                idsperiodos.append(periodos[1][0])
+                idsperiodos.append(periodos[2][0])
+                sheet['K'+str(row)] =  '0'
+                sheet['L'+str(row)] =  '0'
+                sheet['S'+str(row)] =  '0'
+                sheet['T'+str(row)] =  '0'
+                sheet['AA'+str(row)] =  '0'
+                sheet['AB'+str(row)] =  '0'
+                if v[2] in idsperiodos:
+                    if idsperiodos.index(v[2]) == 0:
+                        sheet['K'+str(row)] =  v[1]
+                        sheet['L'+str(row)] =  v[0]
+                    if idsperiodos.index(v[2]) == 1:
+                        sheet['S'+str(row)] =  v[1]
+                        sheet['T'+str(row)] =  v[0]
+                    if idsperiodos.index(v[2]) == 2:
+                        sheet['AA'+str(row)] =  v[1]
+                        sheet['AB'+str(row)] =  v[0]
+                else:
+                    sheet['I'+str(row)] =  v[1]
+                    sheet['J'+str(row)] =  v[0]
+            salarios = self.getpagoSalMT(empleado[1])
+            for s in salarios:
+                sheet['M'+str(row)] =  s[2]
+                sheet['N'+str(row)] =  s[0]
+                sheet['U'+str(row)] =  s[2]
+                sheet['V'+str(row)] =  s[0]
+                sheet['AC'+str(row)] =  s[2]
+                sheet['AD'+str(row)] =  s[0]
+
+            row += 1
+            controw += 1
+        wb.save(path)
+
+
+
+    def limpiarExcel(self,fila,url):         
+        path = url
+        wb = openpyxl.load_workbook(path)
+        sheet = wb.active
+        sheet.delete_rows(fila, sheet.max_row-1)        
+        wb.save(path)
+
+
+
 
     def getpagoSalMT(self, empleado):
         mtsalario = []
-        querygetSal="SELECT ps.sal_devengado,ps.destajo FROM postgres.public.utilidades_periodo_incluye up \
+        querygetSal="SELECT ps.sal_devengado,ps.destajo,ps.horast FROM postgres.public.utilidades_periodo_incluye up \
         INNER JOIN postgres.public.pago_salario AS ps ON up.upincluye_periodo_id = ps.psalario_periodo_id where ps.psalario_empleado_id  = '"+empleado+"' order by up.upincluye_periodo_id asc" 
         self.cursorLoc.execute(querygetSal)
         salarioList = self.cursorLoc.fetchall()
         for sal in salarioList:
-            mtsalario.append(sal[0] - sal[1])
-
+            mtsalario.append(((sal[0] - sal[1]),sal[2],sal[1]))
         return mtsalario
 
 
     def getVacacionesMT(self, empleado):
         mtvacaciones = []
-        querygetVaca="SELECT v.tiempo_tota,p.id  FROM postgres.public.periodo p \
+        querygetVaca="SELECT v.importe_total,v.tiempo_tota,p.id  FROM postgres.public.periodo p \
         INNER JOIN postgres.public.vacacionesp AS v ON p.id = v.vacacionesp_periodo_id where v.vacacionesp_empleado_id  = '"+empleado+"' order by p.id asc" 
         self.cursorLoc.execute(querygetVaca)
         vacacionesList = self.cursorLoc.fetchall()
@@ -294,9 +432,9 @@ class FormularioCalcUtilidadesDesign():
                 importe=float(vac[0])
                 tarifaH=float(self.getDestajo(empleado)[0])
                 calcVaca = importe*tarifaH*8
-                mtvacaciones.append((calcVaca, vac[1]))
+                mtvacaciones.append((calcVaca, vac[1],vac[2]))
             else:
-                mtvacaciones.append((vac[0], vac[1]))
+                mtvacaciones.append((vac[0], vac[1],vac[2]))
         return mtvacaciones
 
         
@@ -305,7 +443,7 @@ class FormularioCalcUtilidadesDesign():
 
     def getDestajo(self,empleado):
         querygetSal="SELECT e.thoraria,e.destajo FROM postgres.public.empleado AS e \
-            where e.id  = '"+empleado+"'"
+            where e.id  = '"+str(empleado)+"'"
         self.cursorLoc.execute(querygetSal)
         result = self.cursorLoc.fetchone()
         return result

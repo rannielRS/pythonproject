@@ -244,7 +244,8 @@ class FormularioEvaluacionDesign():
         self.cursorLoc.execute(queryP)
         return self.cursorLoc.fetchone()[0]
 
-    def signEva(self):         
+    def signEva(self): 
+        self.limpiarExcel(3)        
         path = "file/evaluacion.xlsx"
         wb = openpyxl.load_workbook(path)
         sheet = wb.active
@@ -262,6 +263,19 @@ class FormularioEvaluacionDesign():
             sheet['E'+str(row)]=values[6]
 
             row+=1
+        wb.save(path)
+        
+
+    def getDepartamento(self,idemp):         
+        queryP="SELECT a.area  FROM postgres.public.empleado emp INNER JOIN postgres.public.area AS a ON emp.empleado_area_id  = a.id where emp.id = "+str(idemp)
+        self.cursorLoc.execute(queryP)
+        return self.cursorLoc.fetchone()[0]
+
+    def limpiarExcel(self,fila):         
+        path = "file/evaluacion.xlsx"
+        wb = openpyxl.load_workbook(path)
+        sheet = wb.active
+        sheet.delete_rows(fila, sheet.max_row-1)        
         wb.save(path)
 
     
