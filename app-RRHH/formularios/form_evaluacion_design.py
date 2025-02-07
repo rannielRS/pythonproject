@@ -3,7 +3,7 @@ from tkinter import *
 import pymssql
 import psycopg2
 from tkinter import ttk, messagebox
-from config import COLOR_CUERPO_PRINCIPAL, COLOR_BARRA_SUPERIOR
+from config import COLOR_CUERPO_PRINCIPAL, COLOR_BARRA_SUPERIOR,CONN_LOC,CURSOR_LOC
 import openpyxl
 
 class FormularioEvaluacionDesign():
@@ -12,12 +12,8 @@ class FormularioEvaluacionDesign():
        
         #Definiendo variables
         # Variables de conexion
-        self.connLoc = psycopg2.connect(
-            host="localhost",
-            database="postgres",
-            user="postgres",
-            password="proyecto") 
-        self.cursorLoc = self.connLoc.cursor()
+        self.connLoc = CONN_LOC
+        self.cursorLoc = CURSOR_LOC
         if self.getPeriodo():
             
             # Definiendo controles de seleccion

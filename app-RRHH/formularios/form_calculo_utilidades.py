@@ -3,7 +3,7 @@ from tkinter import *
 import pymssql
 import psycopg2
 from tkinter import ttk, messagebox
-from config import COLOR_CUERPO_PRINCIPAL, COLOR_BARRA_SUPERIOR
+from config import COLOR_CUERPO_PRINCIPAL, COLOR_BARRA_SUPERIOR, CONN_ZUN,CURSOR_ZUN,CONN_LOC,CURSOR_LOC
 import openpyxl
 
 class FormularioCalcUtilidadesDesign():
@@ -13,20 +13,11 @@ class FormularioCalcUtilidadesDesign():
         #Definiendo variables
         # Variables de conexion
         #Conexion
-        self.connZun = pymssql.connect(
-            server='10.105.213.6',
-            user='userutil',
-            password='1234',
-            database='ZUNpr',
-            as_dict=True)
-        self.cursorZun = self.connZun.cursor()
+        self.connZun = CONN_ZUN
+        self.cursorZun = CURSOR_ZUN
 
-        self.connLoc = psycopg2.connect(
-            host="localhost",
-            database="postgres",
-            user="postgres",
-            password="proyecto") 
-        self.cursorLoc = self.connLoc.cursor()
+        self.connLoc = CONN_LOC
+        self.cursorLoc = CURSOR_LOC
         if self.getPeriodo():
             #variablesde estado
             self.registro_salario = False
@@ -359,19 +350,24 @@ class FormularioCalcUtilidadesDesign():
                 sheet['H'+str(row)] =  'Si'
             else:
                 sheet['H'+str(row)] =  'No'
-            vacaciones = self.getVacacionesMT(empleado[1])
+                
+            sheet['I'+str(row)] =  '0'
+            sheet['J'+str(row)] =  '0'
+            sheet['K'+str(row)] =  '0'
+            sheet['L'+str(row)] =  '0'
+            sheet['S'+str(row)] =  '0'
+            sheet['T'+str(row)] =  '0'
+            sheet['AA'+str(row)] =  '0'
+            sheet['AB'+str(row)] =  '0'
+            vacaciones = self.getVacacionesMT(empleado[1])            
             for v in vacaciones:
                 idsperiodos =  []
                 periodos = list(self.getPeriodo())
                 idsperiodos.append(periodos[0][0])
                 idsperiodos.append(periodos[1][0])
                 idsperiodos.append(periodos[2][0])
-                sheet['K'+str(row)] =  '0'
-                sheet['L'+str(row)] =  '0'
-                sheet['S'+str(row)] =  '0'
-                sheet['T'+str(row)] =  '0'
-                sheet['AA'+str(row)] =  '0'
-                sheet['AB'+str(row)] =  '0'
+                
+                
                 if v[2] in idsperiodos:
                     if idsperiodos.index(v[2]) == 0:
                         sheet['K'+str(row)] =  v[1]

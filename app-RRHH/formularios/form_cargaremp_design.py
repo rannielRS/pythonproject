@@ -1,11 +1,11 @@
 import tkinter as tk
 from tkinter import *
-import pymssql
-import psycopg2
 from tkinter import ttk, messagebox
-from config import COLOR_CUERPO_PRINCIPAL, COLOR_BARRA_SUPERIOR
+from config import COLOR_CUERPO_PRINCIPAL, COLOR_BARRA_SUPERIOR, CONN_ZUN,CURSOR_ZUN,CONN_LOC,CURSOR_LOC
+
 from PIL import Image, ImageTk
 import openpyxl
+
 
 
 class FormularioCargarEDesign():
@@ -17,20 +17,11 @@ class FormularioCargarEDesign():
         self.im_checked = ImageTk.PhotoImage(Image.open("imagenes/checked.png").resize((15,15)))
         self.im_unchecked = ImageTk.PhotoImage(Image.open("imagenes/unchecked.png").resize((15,15)))
         #Conexion
-        self.connZun = pymssql.connect(
-            server='10.105.213.6',
-            user='userutil',
-            password='1234',
-            database='ZUNpr',
-            as_dict=True)
-        self.cursorZun = self.connZun.cursor()
+        self.connZun = CONN_ZUN
+        self.cursorZun = CURSOR_ZUN
 
-        self.connLoc = psycopg2.connect(
-            host="localhost",
-            database="postgres",
-            user="postgres",
-            password="proyecto") 
-        self.cursorLoc = self.connLoc.cursor() 
+        self.connLoc = CONN_LOC
+        self.cursorLoc = CURSOR_LOC 
         if self.getPeriodo():
             #type empleado
             self.tx_empleado = ttk.Entry(panel_principal, font=(
@@ -246,11 +237,18 @@ class FormularioCargarEDesign():
     def getPeriodo(self):         
         queryP='SELECT p.* FROM postgres.public.utilidades_periodo_incluye x INNER JOIN postgres.public.periodo AS p ON x.upincluye_periodo_id = p.id order by p.id asc'
         self.cursorLoc.execute(queryP)
-        return self.cursorLoc.fetchall()
-
+        return self.cursorLoc.fetchall() 
+    
+    def limpiarExcel(self,fila,url):         
+        path = url
+        wb = openpyxl.load_workbook(path)
+        sheet = wb.active
+        sheet.delete_rows(fila, sheet.max_row-1)        
+        wb.save(path)
+        
     def mostrarListado(self):         
         path = "file/Listado de trabajadores1.xlsx"
-
+        self.limpiarExcel(5,path)
         wb = openpyxl.load_workbook(path)
 
         sheet = wb.active

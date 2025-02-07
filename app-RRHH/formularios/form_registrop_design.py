@@ -3,7 +3,8 @@ from tkinter import *
 import pymssql
 import psycopg2
 from tkinter import ttk, messagebox
-from config import COLOR_CUERPO_PRINCIPAL, COLOR_BARRA_SUPERIOR
+from config import COLOR_CUERPO_PRINCIPAL, COLOR_BARRA_SUPERIOR,CONN_ZUN,CURSOR_ZUN,CONN_LOC,CURSOR_LOC
+
 from datetime import datetime
 
 
@@ -13,16 +14,10 @@ class FormularioRegistroPDesign():
     def __init__(self, panel_principal):   
        
         #Definiendo variables de conexion
-        self.conn = pymssql.connect(
-            server='10.105.213.6',
-            user='userutil',
-            password='1234',
-            database='ZUNpr',
-            as_dict=True
-            )
-        self.cursor = self.conn.cursor()
-        self.connLoc = psycopg2.connect(host="localhost", database="postgres", user="postgres", password="proyecto")
-        self.cursorLoc = self.connLoc.cursor()
+        self.conn = CONN_ZUN
+        self.cursor = CURSOR_ZUN
+        self.connLoc = CONN_LOC
+        self.cursorLoc = CURSOR_LOC
         #Definiendo variables
         self.var_periodo = StringVar()
         self.anno_trim = StringVar()
