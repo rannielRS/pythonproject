@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import *
-import pymssql
-import psycopg2
+from decimal import *
 from tkinter import ttk, messagebox
 from config import COLOR_CUERPO_PRINCIPAL, COLOR_BARRA_SUPERIOR, CONN_ZUN,CURSOR_ZUN,CONN_LOC,CURSOR_LOC
 import openpyxl
@@ -234,7 +233,7 @@ class FormularioCalcUtilidadesDesign():
 
         slistEmp = self.cursorLoc.fetchall()       
         for row in slistEmp:
-            self.treeEUtil.insert('','end',values=("'"+row[0]+"'",row[1],row[2],row[3],row[4],row[5],row[5]))
+            self.treeEUtil.insert('','end',values=("'"+row[0]+"'",row[1],row[2],row[3],row[4],row[5],row[6],row[7]))
         self.tx_total['text'] = 'Total de registros: '+str(len(self.treeEUtil.get_children()))
             
 
@@ -298,7 +297,7 @@ class FormularioCalcUtilidadesDesign():
                 mtvacaciones += rowvaca[0]
             queryInsertRe = "INSERT INTO postgres.public.resumen_calculo_utilidades\
                 (resumen_empleado_id,resumen_utilidadesd_id,mtvacaciones,mtsalario,horastt,coeficienteeva_utilidades,descrip_coeficiente,devengado)\
-                    VALUES ('"+emp[0]+"',"+str(self.getUtiliDist()[0])+","+str(round(mtvacaciones,2))+","+str(round(mtsalario,2))+","+str(horast)+","+str(self.calcCoeficienteEva(emp[0]))+",'',"+str(round((mtsalario+mtvacaciones)))+")"
+                    VALUES ('"+emp[0]+"',"+str(self.getUtiliDist()[0])+","+str(round(mtvacaciones,2))+","+str(round(mtsalario,2))+","+str(round(horast,2))+","+str(round(self.calcCoeficienteEva(emp[0]),2))+",'',"+str(round((Decimal(mtsalario)+Decimal(mtvacaciones)),2))+")"
             self.cursorLoc.execute(queryInsertRe)
             self.connLoc.commit()
         self.actualizartreeEUtil()
@@ -325,8 +324,11 @@ class FormularioCalcUtilidadesDesign():
                 else:
                     sumeva += eva[0]
             else:
-                messagebox.showinfo('Notificación','No tiene registro de evaluación en el mes de '+str(periodo[1]))
-        return sumeva/countDiv
+                return messagebox.showinfo('Notificación',"'Trabajador '"+emp+"'No tiene registro de evaluación en el mes de "+str(periodo[1]))
+        if countDiv >0: 
+            return sumeva/countDiv
+        else:
+            return 0
 
     def resumendetallemin(self):
         path = "file/resumen_detalle_min.xlsx"
@@ -346,7 +348,7 @@ class FormularioCalcUtilidadesDesign():
             sheet['E'+str(row)] =  empleado[3]
             sheet['F'+str(row)] =  empleado[4]
             sheet['G'+str(row)] =  empleado[5]
-            if self.getDestajo(empleado[1])[1]:
+            if self.getDestajo(empleado[1])[1] is True:
                 sheet['H'+str(row)] =  'Si'
             else:
                 sheet['H'+str(row)] =  'No'
@@ -359,15 +361,13 @@ class FormularioCalcUtilidadesDesign():
             sheet['T'+str(row)] =  '0'
             sheet['AA'+str(row)] =  '0'
             sheet['AB'+str(row)] =  '0'
-            vacaciones = self.getVacacionesMT(empleado[1])            
-            for v in vacaciones:
-                idsperiodos =  []
-                periodos = list(self.getPeriodo())
-                idsperiodos.append(periodos[0][0])
-                idsperiodos.append(periodos[1][0])
-                idsperiodos.append(periodos[2][0])
-                
-                
+            idsperiodos =  []
+            periodos = list(self.getPeriodo())
+            idsperiodos.append(periodos[0][0])
+            idsperiodos.append(periodos[1][0])
+            idsperiodos.append(periodos[2][0])  
+            vacaciones = self.getVacacionesMT(empleado[1])                   
+            for v in vacaciones:               
                 if v[2] in idsperiodos:
                     if idsperiodos.index(v[2]) == 0:
                         sheet['K'+str(row)] =  v[1]
@@ -381,14 +381,25 @@ class FormularioCalcUtilidadesDesign():
                 else:
                     sheet['I'+str(row)] =  v[1]
                     sheet['J'+str(row)] =  v[0]
-            salarios = self.getpagoSalMT(empleado[1])
-            for s in salarios:
-                sheet['M'+str(row)] =  s[2]
-                sheet['N'+str(row)] =  s[0]
-                sheet['U'+str(row)] =  s[2]
-                sheet['V'+str(row)] =  s[0]
-                sheet['AC'+str(row)] =  s[2]
-                sheet['AD'+str(row)] =  s[0]
+
+            sheet['M'+str(row)] =  '0'
+            sheet['N'+str(row)] =  '0'
+            sheet['U'+str(row)] =  '0'
+            sheet['V'+str(row)] =  '0'
+            sheet['AC'+str(row)] =  '0'
+            sheet['AD'+str(row)] =  '0'
+            salarios = list(self.getpagoSalMT(empleado[1]))
+            for sal in salarios:
+                if idsperiodos.index(sal[3]) == 0:
+                    sheet['M'+str(row)] =  sal[2]
+                    sheet['N'+str(row)] =  sal[0]
+                if idsperiodos.index(sal[3]) == 1:
+                    sheet['U'+str(row)] =  sal[2]
+                    sheet['V'+str(row)] =  sal[0]
+                if idsperiodos.index(sal[3]) == 2:
+                    sheet['AC'+str(row)] =  sal[2]
+                    sheet['AD'+str(row)] =  sal[0]
+
 
             row += 1
             controw += 1
@@ -408,12 +419,12 @@ class FormularioCalcUtilidadesDesign():
 
     def getpagoSalMT(self, empleado):
         mtsalario = []
-        querygetSal="SELECT ps.sal_devengado,ps.destajo,ps.horast FROM postgres.public.utilidades_periodo_incluye up \
+        querygetSal="SELECT ps.sal_devengado,ps.destajo,ps.horast,ps.psalario_periodo_id FROM postgres.public.utilidades_periodo_incluye up \
         INNER JOIN postgres.public.pago_salario AS ps ON up.upincluye_periodo_id = ps.psalario_periodo_id where ps.psalario_empleado_id  = '"+empleado+"' order by up.upincluye_periodo_id asc" 
         self.cursorLoc.execute(querygetSal)
         salarioList = self.cursorLoc.fetchall()
         for sal in salarioList:
-            mtsalario.append(((sal[0] - sal[1]),sal[2],sal[1]))
+            mtsalario.append(((sal[0]),sal[2],sal[1],sal[3]))
         return mtsalario
 
 
@@ -425,10 +436,13 @@ class FormularioCalcUtilidadesDesign():
         vacacionesList = self.cursorLoc.fetchall()
         for vac in vacacionesList:
             if self.getDestajo(empleado)[1]:
-                importe=float(vac[0])
-                tarifaH=float(self.getDestajo(empleado)[0])
-                calcVaca = importe*tarifaH*8
-                mtvacaciones.append((calcVaca, vac[1],vac[2]))
+                tiempo=float(vac[1])
+                if self.getTarifaZun(empleado[0],vac[2]) is not None:
+                    tarifaH = self.getTarifaZun(empleado[0],vac[2])[0]
+                else:
+                    tarifaH=float(self.getDestajo(empleado)[0])
+                calcVaca = tiempo*tarifaH*8
+                mtvacaciones.append((round(calcVaca,2), vac[1],vac[2]))
             else:
                 mtvacaciones.append((vac[0], vac[1],vac[2]))
         return mtvacaciones
@@ -439,9 +453,16 @@ class FormularioCalcUtilidadesDesign():
 
     def getDestajo(self,empleado):
         querygetSal="SELECT e.thoraria,e.destajo FROM postgres.public.empleado AS e \
-            where e.id  = '"+str(empleado)+"'"
+            where e.id  = '"+empleado+"'"
         self.cursorLoc.execute(querygetSal)
         result = self.cursorLoc.fetchone()
+        return result
+
+    def getTarifaZun(self,empleado,periodo):
+        querygetTarifa="SELECT x.tarifa_horaria FROM ZUNpr.dbo.h_empleado x \
+            where x.no_interno  = '"+empleado+"' AND x.id_peri = "+str(periodo)
+        self.cursorZun.execute(querygetTarifa)
+        result = self.cursorZun.fetchone()
         return result
 
 
