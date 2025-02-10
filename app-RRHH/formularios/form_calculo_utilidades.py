@@ -4,6 +4,8 @@ from decimal import *
 from tkinter import ttk, messagebox
 from config import COLOR_CUERPO_PRINCIPAL, COLOR_BARRA_SUPERIOR, CONN_ZUN,CURSOR_ZUN,CONN_LOC,CURSOR_LOC
 import openpyxl
+import subprocess
+import os
 
 class FormularioCalcUtilidadesDesign():
 
@@ -24,6 +26,13 @@ class FormularioCalcUtilidadesDesign():
             # Definiendo controles de seleccion
             self.tx_empleado = ttk.Entry(panel_principal, font=('Times', 14), width=10)
             self.tx_empleado.grid(row=0,column=0,padx=5,pady=5,ipadx=40)
+
+            # Definiendo monto de distribucion de utilidades
+            self.tb_monto = tk.Label(panel_principal, font=('Times', 12), bg=COLOR_CUERPO_PRINCIPAL, text='Monto a distribuir:')
+            self.tb_monto.place(x=750, y=305)
+
+            self.tx_distribuir = ttk.Entry(panel_principal, font=('Times', 14), width=10)
+            self.tx_distribuir.place(x=875, y=300) 
 
             #Boton para buscar empleados        
             self.btn_bempleados = tk.Button(panel_principal, text="Buscar", font=(
@@ -46,20 +55,20 @@ class FormularioCalcUtilidadesDesign():
             #self.cb_periodo.current(0)
             self.cb_departamento.place(x=520, y=5)
 
-            #Boton para agregar eva        
-            self.btn_agEva = tk.Button(panel_principal, text="Registrar salario", font=(
+            #Boton para registrar salario       
+            self.btn_agSal = tk.Button(panel_principal, text="Registrar salario", font=(
                 'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.regSal)
-            self.btn_agEva.place(x=750, y=100)
+            self.btn_agSal.place(x=750, y=100)
 
-            #Boton para agregar eva        
-            self.btn_saveEva = tk.Button(panel_principal, text="Registrar vacaciones", font=(
+            #Boton para registrar vacaciones        
+            self.btn_agVaca = tk.Button(panel_principal, text="Registrar vacaciones", font=(
                 'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.regVac)
-            self.btn_saveEva.place(x=750, y=180)
+            self.btn_agVaca.place(x=750, y=180)
 
-            #Boton aprobar evaluaciones        
-            self.btn_signEva = tk.Button(panel_principal, text="Mostrar resumen", font=(
+            #Boton mostrar resumen        
+            self.btn_showResume = tk.Button(panel_principal, text="Mostrar resumen", font=(
                 'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.showResumen)
-            self.btn_signEva.place(x=750, y=230)                 
+            self.btn_showResume.place(x=750, y=230)                 
             
 
             #Treeview        
@@ -87,11 +96,22 @@ class FormularioCalcUtilidadesDesign():
             self.treeEUtil.grid(row=1,column=0, columnspan=5,ipadx=5,padx=5,pady=5)
             self.actualizartreeEUtil() 
             self.cargarDpto() 
-            self.resumendetallemin()
+            
             #print(self.getVacacionesMT('0091'))
         else:
             messagebox.showinfo('Notificación','Debe registrar un período de evaluación')
 
+    def getPagoDestajoZun(self,emp,periodo):
+        tdestajo = 0
+        queryDestajo = "SELECT hp.importe FROM ZUNpr.dbo.h_incidencias AS hi INNER JOIN ZUNpr.dbo.h_pagos AS hp ON  hi.id_inci = hp.id_inci \
+            WHERE hp.id_cpago = 30 AND hi.no_interno = '"+emp+"' AND hi.id_ppago = "+str(periodo)  
+        print(queryDestajo)
+        self.cursorZun.execute(queryDestajo)
+        listDest=self.cursorZun.fetchall()
+        for dest in listDest:
+            tdestajo += dest['importe']
+        print(tdestajo)
+        return tdestajo
 
     #Definiendo tree view de periodo
     def regSal(self):                
@@ -104,27 +124,30 @@ class FormularioCalcUtilidadesDesign():
         slistEmp = self.cursorLoc.fetchall()            
         for row in slistEmp:
             #Cargar nomina del primer mes del periodo
-            queryGetNom1 = "SELECT x.Id_nomina_sal,x.no_interno,x.deveng_salario,x.pago_2,dias_lab FROM ZUNpr.dbo.nomina_sal x where x.no_interno="+row[0]+" and x.id_periodo="+str(self.getPeriodo()[0][0])
+            queryGetNom1 = "SELECT x.Id_nomina_sal,x.no_interno,x.deveng_salario,x.dias_lab FROM ZUNpr.dbo.nomina_sal x where x.no_interno="+row[0]+" and x.id_periodo="+str(self.getPeriodo()[0][0])
             self.cursorZun.execute(queryGetNom1)
             sal_emp=self.cursorZun.fetchone()
-            if sal_emp is not None:            
-                queryInsertSalLoc = "INSERT INTO postgres.public.pago_salario (id, sal_devengado,	destajo,	horast,	psalario_empleado_id,	psalario_periodo_id) VALUES("+str(sal_emp['Id_nomina_sal'])+","+str(sal_emp['deveng_salario'])+","+str(sal_emp['pago_2'])+","+str(sal_emp['dias_lab'])+",'"+row[0]+"',"+str(self.getPeriodo()[0][0])+")"
+            if sal_emp is not None:
+                destajo = self.getPagoDestajoZun(row[0],self.getPeriodo()[0][0])            
+                queryInsertSalLoc = "INSERT INTO postgres.public.pago_salario (id, sal_devengado,	destajo,	horast,	psalario_empleado_id,	psalario_periodo_id) VALUES("+str(sal_emp['Id_nomina_sal'])+","+str(sal_emp['deveng_salario'])+","+str(destajo)+","+str(sal_emp['dias_lab'])+",'"+row[0]+"',"+str(self.getPeriodo()[0][0])+")"
                 self.cursorLoc.execute(queryInsertSalLoc)
                 self.connLoc.commit()
             #Cargar nomina del segundo mes del periodo
-            queryGetNom1 = "SELECT x.Id_nomina_sal,x.no_interno,x.deveng_salario,x.pago_2,dias_lab FROM ZUNpr.dbo.nomina_sal x where x.no_interno="+row[0]+" and x.id_periodo="+str(self.getPeriodo()[1][0])
+            queryGetNom1 = "SELECT x.Id_nomina_sal,x.no_interno,x.deveng_salario,x.dias_lab FROM ZUNpr.dbo.nomina_sal x where x.no_interno="+row[0]+" and x.id_periodo="+str(self.getPeriodo()[1][0])
             self.cursorZun.execute(queryGetNom1)
             sal_emp=self.cursorZun.fetchone()
             if sal_emp is not None:
-                queryInsertSalLoc = "INSERT INTO postgres.public.pago_salario (id, sal_devengado,	destajo,	horast,	psalario_empleado_id,	psalario_periodo_id) VALUES("+str(sal_emp['Id_nomina_sal'])+","+str(sal_emp['deveng_salario'])+","+str(sal_emp['pago_2'])+","+str(sal_emp['dias_lab'])+",'"+row[0]+"',"+str(self.getPeriodo()[1][0])+")"
+                destajo = self.getPagoDestajoZun(row[0],self.getPeriodo()[1][0]) 
+                queryInsertSalLoc = "INSERT INTO postgres.public.pago_salario (id, sal_devengado,	destajo,	horast,	psalario_empleado_id,	psalario_periodo_id) VALUES("+str(sal_emp['Id_nomina_sal'])+","+str(sal_emp['deveng_salario'])+","+str(destajo)+","+str(sal_emp['dias_lab'])+",'"+row[0]+"',"+str(self.getPeriodo()[1][0])+")"
                 self.cursorLoc.execute(queryInsertSalLoc)
                 self.connLoc.commit()
             #Cargar nomina del tercer mes del periodo
-            queryGetNom1 = "SELECT x.Id_nomina_sal,x.no_interno,x.deveng_salario,x.pago_2,dias_lab FROM ZUNpr.dbo.nomina_sal x where x.no_interno="+row[0]+" and x.id_periodo="+str(self.getPeriodo()[2][0])
+            queryGetNom1 = "SELECT x.Id_nomina_sal,x.no_interno,x.deveng_salario,x.dias_lab FROM ZUNpr.dbo.nomina_sal x where x.no_interno="+row[0]+" and x.id_periodo="+str(self.getPeriodo()[2][0])
             self.cursorZun.execute(queryGetNom1)
             sal_emp=self.cursorZun.fetchone()
             if sal_emp is not None:
-                queryInsertSalLoc = "INSERT INTO postgres.public.pago_salario (id, sal_devengado,	destajo,	horast,	psalario_empleado_id,	psalario_periodo_id) VALUES("+str(sal_emp['Id_nomina_sal'])+","+str(sal_emp['deveng_salario'])+","+str(sal_emp['pago_2'])+","+str(sal_emp['dias_lab'])+",'"+row[0]+"',"+str(self.getPeriodo()[2][0])+")"
+                destajo = self.getPagoDestajoZun(row[0],self.getPeriodo()[2][0])
+                queryInsertSalLoc = "INSERT INTO postgres.public.pago_salario (id, sal_devengado,	destajo,	horast,	psalario_empleado_id,	psalario_periodo_id) VALUES("+str(sal_emp['Id_nomina_sal'])+","+str(sal_emp['deveng_salario'])+","+str(destajo)+","+str(sal_emp['dias_lab'])+",'"+row[0]+"',"+str(self.getPeriodo()[2][0])+")"
                 self.cursorLoc.execute(queryInsertSalLoc)
                 self.connLoc.commit()
             countReg+=1
@@ -207,6 +230,104 @@ class FormularioCalcUtilidadesDesign():
         self.registro_vacaciones = True
         messagebox.showinfo('Confirmación','La información de las vacaciones se registró satisfactoriamente')
 
+    def distribuirUtil(self):
+        path = "file/utilidades_dist.xlsx"
+        row = 6 
+        controw = 1
+        self.limpiarExcel(row,path)   
+        wb = openpyxl.load_workbook(path)
+        sheet = wb.active
+        montoDistribuir = self.tx_distribuir.get()
+        sumatemp = 0
+        salarioPromedio = 0
+        salbaseCalculo = 0
+        totalSalbaseCalculo = 0
+        CoefDistribuir = 0
+            
+        queryP="SELECT a.area,emp.id,emp.ci,emp.nombreap,emp.escalas,emp.thoraria  FROM postgres.public.empleado emp INNER JOIN postgres.public.area AS a ON emp.empleado_area_id  = a.id ORDER BY a.id"
+        self.cursorLoc.execute(queryP)
+        listEmp = self.cursorLoc.fetchall()
+        for empleado in listEmp:
+            sheet['B'+str(row)] =  controw
+            sheet['C'+str(row)] =  empleado[3]
+            sheet['D'+str(row)] =  empleado[4]
+                
+            sheet['E'+str(row)] =  '0'
+            sheet['F'+str(row)] =  '0'
+            sheet['G'+str(row)] =  '0'
+            sheet['H'+str(row)] =  '0'
+            sheet['I'+str(row)] =  '0'
+            sheet['J'+str(row)] =  '0'
+            sheet['K'+str(row)] =  '0'
+            sheet['L'+str(row)] =  '0'
+            sheet['M'+str(row)] =  '0'
+            sheet['N'+str(row)] =  '0'
+            sheet['O'+str(row)] =  '0'
+            sheet['P'+str(row)] =  '0'
+            sheet['Q'+str(row)] =  '0'
+            sheet['R'+str(row)] =  '0'
+            sheet['S'+str(row)] =  '0'
+            idsperiodos =  []
+            periodos = list(self.getPeriodo())
+            idsperiodos.append(periodos[0][0])
+            idsperiodos.append(periodos[1][0])
+            idsperiodos.append(periodos[2][0])  
+            vacacionesmAnt1 = 0
+            vacacionesm1 = 0
+            vacacionesm2 = 0
+            vacacionesm3 = 0
+            vacaciones = self.getVacacionesMT(empleado[1])                   
+            for v in vacaciones:               
+                if v[2] in idsperiodos:
+                    if idsperiodos.index(v[2]) == 0:
+                        vacacionesm1 =  v[0] 
+                    if idsperiodos.index(v[2]) == 1:
+                        vacacionesm2 =  v[0]
+                    if idsperiodos.index(v[2]) == 2:
+                        vacacionesm3 =  v[0]
+                else:
+                    vacacionesmAnt1 =  v[0]
+
+            salariomes1 = 0
+            horasmes1 = 0
+            salariomes2 = 0
+            horasmes2 = 0
+            salariomes3 = 0 
+            horasmes3 = 0           
+            salarios = list(self.getpagoSalMT(empleado[1]))
+            for sal in salarios:
+                if idsperiodos.index(sal[3]) == 0:
+                    salariomes1 =  sal[0] - sal[2]
+                    horasmes1 = sal[1]
+                if idsperiodos.index(sal[3]) == 1:
+                    salariomes2 =  sal[0] - sal[2]
+                    horasmes2 = sal[1]
+                if idsperiodos.index(sal[3]) == 2:
+                    salariomes3 =  sal[0] - sal[2]
+                    horasmes3 = sal[1]
+
+            sheet['E'+str(row)] =  horasmes1
+            sheet['G'+str(row)] =  horasmes2
+            sheet['I'+str(row)] =  horasmes3
+
+            sheet['F'+str(row)] =  vacacionesmAnt1+vacacionesm1+salariomes1
+            sheet['H'+str(row)] =  vacacionesm2+salariomes2
+            sheet['J'+str(row)] =  vacacionesm3+salariomes3
+
+            row += 1
+            controw += 1
+        wb.save(path)
+        separador = os.path.sep
+        dir_actual = os.path.dirname(os.path.abspath(__file__))
+        dir = separador.join(dir_actual.split(separador)[:-1])
+        dirfile = separador.join(path.split(separador))
+        print(dir+separador+path)
+        command =  ['open', dir+separador+dirfile]
+        subprocess.run(command,shell=False)
+        
+
+
+
     def limpiarNominaLoc(self):
         queryDemp = 'DELETE FROM postgres.public.pago_salario'
         self.cursorLoc.execute(queryDemp)
@@ -214,6 +335,11 @@ class FormularioCalcUtilidadesDesign():
 
     def limpiarVacacionesLoc(self):
         queryDemp = 'DELETE FROM postgres.public.vacacionesp'
+        self.cursorLoc.execute(queryDemp)
+        self.connLoc.commit()
+
+    def limpiarResumenCalcLoc(self):
+        queryDemp = 'DELETE FROM postgres.public.resumen_calculo_utilidades'
         self.cursorLoc.execute(queryDemp)
         self.connLoc.commit()
 
@@ -281,6 +407,7 @@ class FormularioCalcUtilidadesDesign():
         return self.cursorLoc.fetchone()[0]
 
     def showResumen(self): 
+        self.limpiarResumenCalcLoc()
         queryP="SELECT emp.id,emp.nombreap,emp.ci,a.area  FROM postgres.public.empleado emp INNER JOIN postgres.public.area AS a ON emp.empleado_area_id  = a.id"
         self.cursorLoc.execute(queryP)
         empList = self.cursorLoc.fetchall()
@@ -301,6 +428,8 @@ class FormularioCalcUtilidadesDesign():
             self.cursorLoc.execute(queryInsertRe)
             self.connLoc.commit()
         self.actualizartreeEUtil()
+        self.resumendetallemin()
+        
 
     #Obtener informacion del Periodo de utilidades definido        
     def getUtiliDist(self):
@@ -311,6 +440,7 @@ class FormularioCalcUtilidadesDesign():
     def calcCoeficienteEva(self, emp):
         listPer = self.getPeriodo()
         sumeva = 0
+        coeficiente = 0
         countDiv = len(listPer)
         for periodo in listPer:
             queryEva = "SELECT te.peso FROM postgres.public.tipo_evaluacion te \
@@ -325,10 +455,11 @@ class FormularioCalcUtilidadesDesign():
                     sumeva += eva[0]
             else:
                 return messagebox.showinfo('Notificación',"'Trabajador '"+emp+"'No tiene registro de evaluación en el mes de "+str(periodo[1]))
-        if countDiv >0: 
-            return sumeva/countDiv
-        else:
-            return 0
+        if countDiv > 0: 
+            coeficiente = round((sumeva/countDiv),1)
+            if coeficiente >2:
+                return coeficiente        
+        return coeficiente
 
     def resumendetallemin(self):
         path = "file/resumen_detalle_min.xlsx"
@@ -404,6 +535,13 @@ class FormularioCalcUtilidadesDesign():
             row += 1
             controw += 1
         wb.save(path)
+        separador = os.path.sep
+        dir_actual = os.path.dirname(os.path.abspath(__file__))
+        dir = separador.join(dir_actual.split(separador)[:-1])
+        dirfile = separador.join(path.split(separador))
+        print(dir+separador+path)
+        command =  ['open', dir+separador+dirfile]
+        subprocess.run(command,shell=False)
 
 
 

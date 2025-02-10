@@ -2,7 +2,8 @@ import tkinter as tk
 from tkinter import *
 from tkinter import ttk, messagebox
 from config import COLOR_CUERPO_PRINCIPAL, COLOR_BARRA_SUPERIOR, CONN_ZUN,CURSOR_ZUN,CONN_LOC,CURSOR_LOC
-
+import os
+import subprocess
 from PIL import Image, ImageTk
 import openpyxl
 
@@ -270,8 +271,14 @@ class FormularioCargarEDesign():
 
             row+=1
 
-
         wb.save(path)
+        separador = os.path.sep
+        dir_actual = os.path.dirname(os.path.abspath(__file__))
+        dir = separador.join(dir_actual.split(separador)[:-1])
+        dirfile = separador.join(path.split(separador))
+        print(dir+separador+path)
+        command =  ['open', dir+separador+dirfile]
+        subprocess.run(command,shell=False)
 
     def getDepartamento(self,idemp):         
         queryP="SELECT a.area  FROM postgres.public.empleado emp INNER JOIN postgres.public.area AS a ON emp.empleado_area_id  = a.id where emp.id = "+str(idemp)

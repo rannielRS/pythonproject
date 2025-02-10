@@ -5,7 +5,8 @@ import psycopg2
 from tkinter import ttk, messagebox
 from config import COLOR_CUERPO_PRINCIPAL, COLOR_BARRA_SUPERIOR,CONN_LOC,CURSOR_LOC
 import openpyxl
-
+import os
+import subprocess
 class FormularioEvaluacionDesign():
 
     def __init__(self, panel_principal):   
@@ -241,8 +242,9 @@ class FormularioEvaluacionDesign():
         return self.cursorLoc.fetchone()[0]
 
     def signEva(self): 
-        self.limpiarExcel(3)        
+               
         path = "file/evaluacion.xlsx"
+        self.limpiarExcel(3,path) 
         wb = openpyxl.load_workbook(path)
         sheet = wb.active
         row = 3
@@ -260,15 +262,21 @@ class FormularioEvaluacionDesign():
 
             row+=1
         wb.save(path)
-        
+        separador = os.path.sep
+        dir_actual = os.path.dirname(os.path.abspath(__file__))
+        dir = separador.join(dir_actual.split(separador)[:-1])
+        dirfile = separador.join(path.split(separador))
+        print(dir+separador+path)
+        command =  ['open', dir+separador+dirfile]
+        subprocess.run(command,shell=False)
 
     def getDepartamento(self,idemp):         
         queryP="SELECT a.area  FROM postgres.public.empleado emp INNER JOIN postgres.public.area AS a ON emp.empleado_area_id  = a.id where emp.id = "+str(idemp)
         self.cursorLoc.execute(queryP)
         return self.cursorLoc.fetchone()[0]
 
-    def limpiarExcel(self,fila):         
-        path = "file/evaluacion.xlsx"
+    def limpiarExcel(self,fila,url):         
+        path = url
         wb = openpyxl.load_workbook(path)
         sheet = wb.active
         sheet.delete_rows(fila, sheet.max_row-1)        
