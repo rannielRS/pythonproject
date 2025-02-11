@@ -4,6 +4,7 @@ from decimal import *
 from tkinter import ttk, messagebox
 from config import COLOR_CUERPO_PRINCIPAL, COLOR_BARRA_SUPERIOR, CONN_ZUN,CURSOR_ZUN,CONN_LOC,CURSOR_LOC
 import openpyxl
+from openpyxl.styles import Font, colors, fills, Alignment, PatternFill, NamedStyle
 import subprocess
 import os
 
@@ -33,6 +34,10 @@ class FormularioCalcUtilidadesDesign():
 
             self.tx_distribuir = ttk.Entry(panel_principal, font=('Times', 14), width=10)
             self.tx_distribuir.place(x=875, y=300) 
+
+            self.btn_utilidades = tk.Button(panel_principal, text="Reporte de utilidades", font=(
+                'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.distribuirUtil)
+            self.btn_utilidades.place(x=750, y=350)
 
             #Boton para buscar empleados        
             self.btn_bempleados = tk.Button(panel_principal, text="Buscar", font=(
@@ -105,12 +110,12 @@ class FormularioCalcUtilidadesDesign():
         tdestajo = 0
         queryDestajo = "SELECT hp.importe FROM ZUNpr.dbo.h_incidencias AS hi INNER JOIN ZUNpr.dbo.h_pagos AS hp ON  hi.id_inci = hp.id_inci \
             WHERE hp.id_cpago = 30 AND hi.no_interno = '"+emp+"' AND hi.id_ppago = "+str(periodo)  
-        print(queryDestajo)
+        #print(queryDestajo)
         self.cursorZun.execute(queryDestajo)
         listDest=self.cursorZun.fetchall()
         for dest in listDest:
             tdestajo += dest['importe']
-        print(tdestajo)
+        #print(tdestajo)
         return tdestajo
 
     #Definiendo tree view de periodo
@@ -238,35 +243,87 @@ class FormularioCalcUtilidadesDesign():
         wb = openpyxl.load_workbook(path)
         sheet = wb.active
         montoDistribuir = self.tx_distribuir.get()
+        sheet['G3'] = montoDistribuir
         sumatemp = 0
         salarioPromedio = 0
         salbaseCalculo = 0
         totalSalbaseCalculo = 0
         CoefDistribuir = 0
-            
+        
+        alignmentText = Alignment(horizontal=LEFT)
+        alignmentNumber = Alignment(horizontal=CENTER)
+        text_format = Font(
+        bold = False,
+        name = 'Calibri',
+        size = '0',
+        color = colors.BLACK )   
+        number_format = Font(
+        bold = False,
+        name = 'Calibri',
+        size = '0',
+        color = colors.BLACK) 
+
+
         queryP="SELECT a.area,emp.id,emp.ci,emp.nombreap,emp.escalas,emp.thoraria  FROM postgres.public.empleado emp INNER JOIN postgres.public.area AS a ON emp.empleado_area_id  = a.id ORDER BY a.id"
         self.cursorLoc.execute(queryP)
         listEmp = self.cursorLoc.fetchall()
         for empleado in listEmp:
             sheet['B'+str(row)] =  controw
+            sheet['B'+str(row)].font +=  number_format
+            sheet['B'+str(row)].alignment += alignmentNumber
             sheet['C'+str(row)] =  empleado[3]
+            sheet['C'+str(row)].font +=  text_format
+            sheet['C'+str(row)].alignment += alignmentText
             sheet['D'+str(row)] =  empleado[4]
+            sheet['D'+str(row)].font +=  text_format
+            sheet['D'+str(row)].alignment += alignmentText
                 
             sheet['E'+str(row)] =  '0'
+            sheet['E'+str(row)].font +=  number_format
+            sheet['E'+str(row)].alignment += alignmentNumber
             sheet['F'+str(row)] =  '0'
+            sheet['F'+str(row)].font +=  number_format
+            sheet['F'+str(row)].alignment += alignmentNumber
             sheet['G'+str(row)] =  '0'
+            sheet['G'+str(row)].font +=  number_format
+            sheet['G'+str(row)].alignment += alignmentNumber
             sheet['H'+str(row)] =  '0'
+            sheet['H'+str(row)].font +=  number_format
+            sheet['H'+str(row)].alignment += alignmentNumber
             sheet['I'+str(row)] =  '0'
+            sheet['I'+str(row)].font +=  number_format
+            sheet['I'+str(row)].alignment += alignmentNumber
             sheet['J'+str(row)] =  '0'
+            sheet['J'+str(row)].font +=  number_format
+            sheet['J'+str(row)].alignment += alignmentNumber
             sheet['K'+str(row)] =  '0'
-            sheet['L'+str(row)] =  '0'
-            sheet['M'+str(row)] =  '0'
-            sheet['N'+str(row)] =  '0'
+            sheet['K'+str(row)].font +=  number_format
+            sheet['K'+str(row)].alignment += alignmentNumber
+            sheet['L'+str(row)] =  'NE'
+            sheet['L'+str(row)].font +=  number_format
+            sheet['L'+str(row)].alignment += alignmentNumber
+            sheet['M'+str(row)] =  'NE'
+            sheet['M'+str(row)].font +=  number_format
+            sheet['M'+str(row)].alignment += alignmentNumber
+            sheet['N'+str(row)] =  'NE'
+            sheet['N'+str(row)].font +=  number_format
+            sheet['N'+str(row)].alignment += alignmentNumber
             sheet['O'+str(row)] =  '0'
+            sheet['O'+str(row)].font +=  number_format
+            sheet['O'+str(row)].alignment += alignmentNumber
             sheet['P'+str(row)] =  '0'
+            sheet['P'+str(row)].font +=  number_format
+            sheet['P'+str(row)].alignment += alignmentNumber
             sheet['Q'+str(row)] =  '0'
+            sheet['Q'+str(row)].font +=  number_format
+            sheet['Q'+str(row)].alignment += alignmentNumber
             sheet['R'+str(row)] =  '0'
+            sheet['R'+str(row)].font +=  number_format
+            sheet['R'+str(row)].alignment += alignmentNumber
             sheet['S'+str(row)] =  '0'
+            sheet['S'+str(row)].font +=  number_format
+            sheet['S'+str(row)].alignment += alignmentNumber
+
             idsperiodos =  []
             periodos = list(self.getPeriodo())
             idsperiodos.append(periodos[0][0])
@@ -310,18 +367,38 @@ class FormularioCalcUtilidadesDesign():
             sheet['G'+str(row)] =  horasmes2
             sheet['I'+str(row)] =  horasmes3
 
-            sheet['F'+str(row)] =  vacacionesmAnt1+vacacionesm1+salariomes1
-            sheet['H'+str(row)] =  vacacionesm2+salariomes2
-            sheet['J'+str(row)] =  vacacionesm3+salariomes3
+            sheet['F'+str(row)] =  Decimal(vacacionesmAnt1)+Decimal(vacacionesm1)+Decimal(salariomes1)
+            sheet['H'+str(row)] =  Decimal(vacacionesm2)+Decimal(salariomes2)
+            sheet['J'+str(row)] =  Decimal(vacacionesm3)+Decimal(salariomes3)
+
+            sheet['K'+str(row)] =  round((((Decimal(vacacionesmAnt1)+Decimal(vacacionesm1)+Decimal(salariomes1))+(Decimal(vacacionesm2)+Decimal(salariomes2))+(Decimal(vacacionesm3)+Decimal(salariomes3)))/3),2)
+            
+            sheet['L'+str(row)] = round((self.obtenerEvaCond(empleado[1],periodos[0][0])[0]),1)
+            sheet['M'+str(row)] = round((self.obtenerEvaCond(empleado[1],periodos[1][0])[0]),1)
+            sheet['N'+str(row)] = round((self.obtenerEvaCond(empleado[1],periodos[2][0])[0]),1)
+            sheet['O'+str(row)] = round(self.calcCoeficienteEva(empleado[1]),1)
+            sheet['P'+str(row)] = round(self.calcCoeficienteEva(empleado[1]),1)
+            
+            #Calculo del salario base de cada trabajador
+            sheet['Q'+str(row)] = f'=K{row}*P{row}'
+            
+            
 
             row += 1
             controw += 1
+        sheet['I3'] = f'=SUM(Q6:Q{row+6})'
+        sheet['K3'] = f'=G3/I3'
+
+        for i in range(6,row):
+            sheet['R'+str(i)] = sheet['K3'].value
+            sheet['S'+str(i)] = f'=round((Q{i}*R{i}),2)'
+
+        
         wb.save(path)
         separador = os.path.sep
         dir_actual = os.path.dirname(os.path.abspath(__file__))
         dir = separador.join(dir_actual.split(separador)[:-1])
         dirfile = separador.join(path.split(separador))
-        print(dir+separador+path)
         command =  ['open', dir+separador+dirfile]
         subprocess.run(command,shell=False)
         
@@ -539,7 +616,7 @@ class FormularioCalcUtilidadesDesign():
         dir_actual = os.path.dirname(os.path.abspath(__file__))
         dir = separador.join(dir_actual.split(separador)[:-1])
         dirfile = separador.join(path.split(separador))
-        print(dir+separador+path)
+        
         command =  ['open', dir+separador+dirfile]
         subprocess.run(command,shell=False)
 
@@ -602,6 +679,13 @@ class FormularioCalcUtilidadesDesign():
         self.cursorZun.execute(querygetTarifa)
         result = self.cursorZun.fetchone()
         return result
+
+    def obtenerEvaCond(self,emp,periodo):
+        queryP="SELECT te.peso FROM postgres.public.evaluacion AS e  INNER JOIN postgres.public.tipo_evaluacion AS te ON e.evaluacion_tipoevaluacion_id = te.id where e.evaluacion_empleado_id='"+str(emp)+"' and e.evaluacion_perio_id='"+str(periodo)+"'"
+        #print(queryP)
+        self.cursorLoc.execute(queryP)
+        return self.cursorLoc.fetchone()
+
 
 
     
