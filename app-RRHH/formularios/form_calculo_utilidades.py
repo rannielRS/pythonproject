@@ -243,7 +243,7 @@ class FormularioCalcUtilidadesDesign():
             self.limpiarExcel(row,path)   
             wb = openpyxl.load_workbook(path)
             sheet = wb.active
-            montoDistribuir = self.tx_distribuir.get()
+            montoDistribuir = Decimal(self.tx_distribuir.get())
             sheet['I3'] = montoDistribuir
             sheet['I3'].number_format = '#,##0.00'
             
@@ -259,15 +259,19 @@ class FormularioCalcUtilidadesDesign():
             name = 'Calibri',
             size = '0',
             color = colors.BLACK) 
+            sheet['N5'] =  self.getPeriodo()[0][1]
+            sheet['O5'] =  self.getPeriodo()[1][1]
+            sheet['P5'] =  self.getPeriodo()[2][1]
 
+            sheet['G4'] =  self.getPeriodo()[0][1]
+            sheet['I4'] =  self.getPeriodo()[1][1]
+            sheet['K4'] =  self.getPeriodo()[2][1]
 
             queryP="SELECT a.area,emp.id,emp.ci,emp.nombreap,emp.escalas,emp.thoraria  FROM postgres.public.empleado emp INNER JOIN postgres.public.area AS a ON emp.empleado_area_id  = a.id ORDER BY a.id"
             self.cursorLoc.execute(queryP)
             listEmp = self.cursorLoc.fetchall()
             for empleado in listEmp:
-                sheet['N5'] =  self.getPeriodo()[0][1]
-                sheet['O5'] =  self.getPeriodo()[1][1]
-                sheet['P5'] =  self.getPeriodo()[2][1]
+                
 
                 sheet['B'+str(row)] =  controw
                 sheet['B'+str(row)].font +=  number_format
