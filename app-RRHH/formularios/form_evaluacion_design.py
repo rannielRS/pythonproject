@@ -138,12 +138,12 @@ class FormularioEvaluacionDesign():
         slistEmp = self.cursorLoc.fetchall()            
         for row in slistEmp:
             evames1=evames2=evames3='B'          
-            if self.obtenerEvaCond(row[0],self.getPeriodo()[0][0]) != None:
-                evames1 = self.obtenerEvaCond(row[0],self.getPeriodo()[0][0])[0]                 
-            if self.obtenerEvaCond(row[0],self.getPeriodo()[1][0]) != None:
-                evames2 = self.obtenerEvaCond(row[0],self.getPeriodo()[1][0])[0]
-            if self.obtenerEvaCond(row[0],self.getPeriodo()[2][0]) != None:
-                evames3 = self.obtenerEvaCond(row[0],self.getPeriodo()[2][0])[0]
+            if self.obtenerEvaCond("'"+row[0]+"'",self.getPeriodo()[0][0]) != None:
+                evames1 = self.obtenerEvaCond("'"+row[0]+"'",self.getPeriodo()[0][0])[0]                 
+            if self.obtenerEvaCond("'"+row[0]+"'",self.getPeriodo()[1][0]) != None:
+                evames2 = self.obtenerEvaCond("'"+row[0]+"'",self.getPeriodo()[1][0])[0]
+            if self.obtenerEvaCond("'"+row[0]+"'",self.getPeriodo()[2][0]) != None:
+                evames3 = self.obtenerEvaCond("'"+row[0]+"'",self.getPeriodo()[2][0])[0]
 
             self.treeE.insert('','end',values=("'"+row[0]+"'",row[1],row[2],row[3],evames1,evames2,evames3)) 
 
@@ -207,10 +207,10 @@ class FormularioEvaluacionDesign():
     def obtenerTipoEva(self,eva):
         queryP="SELECT id FROM postgres.public.tipo_evaluacion where eva='"+str(eva)+"'"
         self.cursorLoc.execute(queryP)
-        return self.cursorLoc.fetchall()
+        return self.cursorLoc.fetchone()
 
     def obtenerEvaCond(self,emp,periodo):
-        queryP="SELECT te.eva FROM postgres.public.evaluacion AS e  INNER JOIN postgres.public.tipo_evaluacion AS te ON e.evaluacion_tipoevaluacion_id = te.id where e.evaluacion_empleado_id='"+str(emp)+"' and e.evaluacion_perio_id='"+str(periodo)+"'"
+        queryP="SELECT te.eva FROM postgres.public.evaluacion AS e  INNER JOIN postgres.public.tipo_evaluacion AS te ON e.evaluacion_tipoevaluacion_id = te.id where e.evaluacion_empleado_id="+str(emp)+" and e.evaluacion_perio_id='"+str(periodo)+"'"
         #print(queryP)
         self.cursorLoc.execute(queryP)
         return self.cursorLoc.fetchone()
@@ -220,11 +220,26 @@ class FormularioEvaluacionDesign():
             for parent in self.treeE.get_children():  
                 listTree=self.treeE.item(parent)["values"]
                 slistP=self.getPeriodo()
-                queryInEvaM1="INSERT INTO postgres.public.evaluacion (evaluacion_empleado_id,evaluacion_tipoevaluacion_id,evaluacion_perio_id) \
+                evames1 = self.obtenerEvaCond(listTree[0],str(slistP[0][0]))
+                evames2 = self.obtenerEvaCond(listTree[0],str(slistP[1][0]))
+                evames3 = self.obtenerEvaCond(listTree[0],str(slistP[2][0]))
+                if evames1 is not None:
+                    queryInEvaM1 = "UPDATE postgres.public.evaluacion SET evaluacion_tipoevaluacion_id = "+str(self.obtenerTipoEva(listTree[4])[0])+" \
+                        WHERE evaluacion_empleado_id = "+listTree[0]+" and evaluacion_perio_id = "+str(slistP[0][0])
+                else:
+                    queryInEvaM1="INSERT INTO postgres.public.evaluacion (evaluacion_empleado_id,evaluacion_tipoevaluacion_id,evaluacion_perio_id) \
                             VALUES ("+listTree[0]+","+str(self.obtenerTipoEva(listTree[4])[0][0])+","+str(slistP[0][0])+")"
-                queryInEvaM2="INSERT INTO postgres.public.evaluacion (evaluacion_empleado_id,evaluacion_tipoevaluacion_id,evaluacion_perio_id) \
+                if evames2 is not None:
+                    queryInEvaM2 = "UPDATE postgres.public.evaluacion SET evaluacion_tipoevaluacion_id = "+str(self.obtenerTipoEva(listTree[5])[0])+" \
+                        WHERE evaluacion_empleado_id = "+listTree[0]+" and evaluacion_perio_id = "+str(slistP[1][0])
+                else:
+                    queryInEvaM2="INSERT INTO postgres.public.evaluacion (evaluacion_empleado_id,evaluacion_tipoevaluacion_id,evaluacion_perio_id) \
                             VALUES ("+listTree[0]+","+str(self.obtenerTipoEva(listTree[5])[0][0])+","+str(slistP[1][0])+")"
-                queryInEvaM3="INSERT INTO postgres.public.evaluacion (evaluacion_empleado_id,evaluacion_tipoevaluacion_id,evaluacion_perio_id) \
+                if evames3 is not None:
+                    queryInEvaM3 = "UPDATE postgres.public.evaluacion SET evaluacion_tipoevaluacion_id = "+str(self.obtenerTipoEva(listTree[6])[0])+" \
+                        WHERE evaluacion_empleado_id = "+listTree[0]+" and evaluacion_perio_id = "+str(slistP[2][0])
+                else:            
+                    queryInEvaM3="INSERT INTO postgres.public.evaluacion (evaluacion_empleado_id,evaluacion_tipoevaluacion_id,evaluacion_perio_id) \
                             VALUES ("+listTree[0]+","+str(self.obtenerTipoEva(listTree[6])[0][0])+","+str(slistP[2][0])+")"
                 self.cursorLoc.execute(queryInEvaM1)
                 self.cursorLoc.execute(queryInEvaM2)

@@ -3,3 +3,4 @@ __pycache__/
 formularios/__pycache__/
 #VSCode
 .vscode
+config.py

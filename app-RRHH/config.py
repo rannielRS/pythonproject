@@ -7,9 +7,9 @@ COLOR_MENU_LATERAL_UP = "#f1faff"
 COLOR_CUERPO_PRINCIPAL = "#f1faff"
 COLOR_MENU_CURSOR_ENCIMA = "#d52323"
 CONN_ZUN = pymssql.connect(
-            server = '127.0.0.1',#'10.105.213.6',
-            user='sa',#'userutil',
-            password = 'proyecto',#'1234',
+            server = '10.105.213.6',
+            user='userutil',
+            password = '1234',
             database='ZUNpr',
             as_dict = True
             )

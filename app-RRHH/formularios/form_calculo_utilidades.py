@@ -32,7 +32,7 @@ class FormularioCalcUtilidadesDesign():
             self.tb_monto = tk.Label(panel_principal, font=('Times', 12), bg=COLOR_CUERPO_PRINCIPAL, text='Monto a distribuir:')
             self.tb_monto.place(x=750, y=305)
 
-            self.tx_distribuir = ttk.Entry(panel_principal, font=('Times', 14), width=10)
+            self.tx_distribuir = ttk.Entry(panel_principal, font=('Times', 14), width=13)
             self.tx_distribuir.place(x=875, y=300) 
 
             self.btn_utilidades = tk.Button(panel_principal, text="Reporte de utilidades", font=(
@@ -236,171 +236,215 @@ class FormularioCalcUtilidadesDesign():
         messagebox.showinfo('Confirmación','La información de las vacaciones se registró satisfactoriamente')
 
     def distribuirUtil(self):
-        path = "file/utilidades_dist.xlsx"
-        row = 6 
-        controw = 1
-        self.limpiarExcel(row,path)   
-        wb = openpyxl.load_workbook(path)
-        sheet = wb.active
-        montoDistribuir = self.tx_distribuir.get()
-        sheet['G3'] = montoDistribuir
-        sumatemp = 0
-        salarioPromedio = 0
-        salbaseCalculo = 0
-        totalSalbaseCalculo = 0
-        CoefDistribuir = 0
-        
-        alignmentText = Alignment(horizontal=LEFT)
-        alignmentNumber = Alignment(horizontal=CENTER)
-        text_format = Font(
-        bold = False,
-        name = 'Calibri',
-        size = '0',
-        color = colors.BLACK )   
-        number_format = Font(
-        bold = False,
-        name = 'Calibri',
-        size = '0',
-        color = colors.BLACK) 
+        if self.tx_distribuir.get() != '':
+            path = "file/utilidades_dist.xlsx"
+            row = 6 
+            controw = 1
+            self.limpiarExcel(row,path)   
+            wb = openpyxl.load_workbook(path)
+            sheet = wb.active
+            montoDistribuir = self.tx_distribuir.get()
+            sheet['I3'] = montoDistribuir
+            sheet['I3'].number_format = '#,##0.00'
+            
+            alignmentText = Alignment(horizontal=LEFT)
+            alignmentNumber = Alignment(horizontal=CENTER)
+            text_format = Font(
+            bold = False,
+            name = 'Calibri',
+            size = '0',
+            color = colors.BLACK )   
+            number_format = Font(
+            bold = False,
+            name = 'Calibri',
+            size = '0',
+            color = colors.BLACK) 
 
 
-        queryP="SELECT a.area,emp.id,emp.ci,emp.nombreap,emp.escalas,emp.thoraria  FROM postgres.public.empleado emp INNER JOIN postgres.public.area AS a ON emp.empleado_area_id  = a.id ORDER BY a.id"
-        self.cursorLoc.execute(queryP)
-        listEmp = self.cursorLoc.fetchall()
-        for empleado in listEmp:
-            sheet['B'+str(row)] =  controw
-            sheet['B'+str(row)].font +=  number_format
-            sheet['B'+str(row)].alignment += alignmentNumber
-            sheet['C'+str(row)] =  empleado[3]
-            sheet['C'+str(row)].font +=  text_format
-            sheet['C'+str(row)].alignment += alignmentText
-            sheet['D'+str(row)] =  empleado[4]
-            sheet['D'+str(row)].font +=  text_format
-            sheet['D'+str(row)].alignment += alignmentText
+            queryP="SELECT a.area,emp.id,emp.ci,emp.nombreap,emp.escalas,emp.thoraria  FROM postgres.public.empleado emp INNER JOIN postgres.public.area AS a ON emp.empleado_area_id  = a.id ORDER BY a.id"
+            self.cursorLoc.execute(queryP)
+            listEmp = self.cursorLoc.fetchall()
+            for empleado in listEmp:
+                sheet['N5'] =  self.getPeriodo()[0][1]
+                sheet['O5'] =  self.getPeriodo()[1][1]
+                sheet['P5'] =  self.getPeriodo()[2][1]
+
+                sheet['B'+str(row)] =  controw
+                sheet['B'+str(row)].font +=  number_format
+                sheet['B'+str(row)].alignment += alignmentNumber
+                sheet['C'+str(row)] =  empleado[1]
+                sheet['C'+str(row)].font +=  text_format
+                sheet['C'+str(row)].alignment += alignmentText
+                sheet['D'+str(row)] =  empleado[2]
+                sheet['D'+str(row)].font +=  text_format
+                sheet['D'+str(row)].alignment += alignmentText
+                sheet['E'+str(row)] =  empleado[3]
+                sheet['E'+str(row)].font +=  text_format
+                sheet['E'+str(row)].alignment += alignmentText
+                sheet['F'+str(row)] =  empleado[4]
+                sheet['F'+str(row)].font +=  text_format
+                sheet['F'+str(row)].alignment += alignmentText
+
+                    
+                sheet['G'+str(row)] =  '0'
+                sheet['G'+str(row)].font +=  number_format
+                sheet['G'+str(row)].alignment += alignmentNumber                
+                sheet['H'+str(row)] =  '0'
+                sheet['H'+str(row)].font +=  number_format
+                sheet['H'+str(row)].alignment += alignmentNumber
+                sheet['I'+str(row)] =  '0'
+                sheet['I'+str(row)].font +=  number_format
+                sheet['I'+str(row)].alignment += alignmentNumber
+                sheet['J'+str(row)] =  '0'
+                sheet['J'+str(row)].font +=  number_format
+                sheet['J'+str(row)].alignment += alignmentNumber
+                sheet['K'+str(row)] =  '0'
+                sheet['K'+str(row)].font +=  number_format
+                sheet['K'+str(row)].alignment += alignmentNumber
+                sheet['L'+str(row)] =  'NE'
+                sheet['L'+str(row)].font +=  number_format
+                sheet['L'+str(row)].alignment += alignmentNumber
+                sheet['M'+str(row)] =  'NE'
+                sheet['M'+str(row)].font +=  number_format
+                sheet['M'+str(row)].alignment += alignmentNumber
+                sheet['N'+str(row)] =  'NE'
+                sheet['N'+str(row)].font +=  number_format
+                sheet['N'+str(row)].alignment += alignmentNumber
+                sheet['N'+str(row)].number_format = '#,#0.0'
+                sheet['O'+str(row)] =  '0'
+                sheet['O'+str(row)].font +=  number_format
+                sheet['O'+str(row)].alignment += alignmentNumber
+                sheet['O'+str(row)].number_format = '#,#0.0'
+                sheet['P'+str(row)] =  '0'
+                sheet['P'+str(row)].font +=  number_format
+                sheet['P'+str(row)].alignment += alignmentNumber
+                sheet['P'+str(row)].number_format = '#,#0.0'
+                sheet['Q'+str(row)] =  '0'
+                sheet['Q'+str(row)].font +=  number_format
+                sheet['Q'+str(row)].alignment += alignmentNumber
+                sheet['Q'+str(row)].number_format = '#,##0.00'
+                sheet['R'+str(row)] =  '0'
+                sheet['R'+str(row)].font +=  number_format
+                sheet['R'+str(row)].alignment += alignmentNumber
+                sheet['R'+str(row)].number_format = '#,##0.00'
+                sheet['S'+str(row)] =  '0'
+                sheet['S'+str(row)].font +=  number_format
+                sheet['S'+str(row)].alignment += alignmentNumber
+                sheet['S'+str(row)].number_format = '#,##0.00'
+                sheet['T'+str(row)] =  '0'
+                sheet['T'+str(row)].font +=  number_format
+                sheet['T'+str(row)].alignment += alignmentNumber
+                sheet['T'+str(row)].number_format = '#,##0.00'
+                sheet['U'+str(row)] =  '0'
+                sheet['U'+str(row)].font +=  number_format
+                sheet['U'+str(row)].alignment += alignmentNumber
+                sheet['U'+str(row)].number_format = '#,##0.00'
+
+                idsperiodos =  []
+                periodos = list(self.getPeriodo())
+                idsperiodos.append(periodos[0][0])
+                idsperiodos.append(periodos[1][0])
+                idsperiodos.append(periodos[2][0])  
+                vacacionesmAnt1 = 0
+                vacacionesm1 = 0
+                vacacionesm2 = 0
+                vacacionesm3 = 0
+                vacaciones = self.getVacacionesMT(empleado[1])                   
+                for v in vacaciones:               
+                    if v[2] in idsperiodos:
+                        if idsperiodos.index(v[2]) == 0:
+                            vacacionesm1 =  v[0] 
+                        if idsperiodos.index(v[2]) == 1:
+                            vacacionesm2 =  v[0]
+                        if idsperiodos.index(v[2]) == 2:
+                            vacacionesm3 =  v[0]
+                    else:
+                        vacacionesmAnt1 =  v[0]
+
+                salariomes1 = 0
+                horasmes1 = 0
+                salariomes2 = 0
+                horasmes2 = 0
+                salariomes3 = 0 
+                horasmes3 = 0           
+                salarios = list(self.getpagoSalMT(empleado[1]))
+                for sal in salarios:
+                    if idsperiodos.index(sal[3]) == 0:
+                        salariomes1 =  sal[0] - sal[2]
+                        horasmes1 = sal[1]
+                    if idsperiodos.index(sal[3]) == 1:
+                        salariomes2 =  sal[0] - sal[2]
+                        horasmes2 = sal[1]
+                    if idsperiodos.index(sal[3]) == 2:
+                        salariomes3 =  sal[0] - sal[2]
+                        horasmes3 = sal[1]
+
+                sheet['G'+str(row)] = horasmes1
+                sheet['I'+str(row)] = horasmes2
+                sheet['K'+str(row)] = horasmes3
+
+                sheet['H'+str(row)] = Decimal(vacacionesmAnt1)+Decimal(vacacionesm1)+Decimal(salariomes1)
+                sheet['J'+str(row)] = Decimal(vacacionesm2)+Decimal(salariomes2)
+                sheet['L'+str(row)] = Decimal(vacacionesm3)+Decimal(salariomes3)
+
+                sheet['M'+str(row)] = round((((Decimal(vacacionesmAnt1)+Decimal(vacacionesm1)+Decimal(salariomes1))+(Decimal(vacacionesm2)+Decimal(salariomes2))+(Decimal(vacacionesm3)+Decimal(salariomes3)))/3),2)
                 
-            sheet['E'+str(row)] =  '0'
-            sheet['E'+str(row)].font +=  number_format
-            sheet['E'+str(row)].alignment += alignmentNumber
-            sheet['F'+str(row)] =  '0'
-            sheet['F'+str(row)].font +=  number_format
-            sheet['F'+str(row)].alignment += alignmentNumber
-            sheet['G'+str(row)] =  '0'
-            sheet['G'+str(row)].font +=  number_format
-            sheet['G'+str(row)].alignment += alignmentNumber
-            sheet['H'+str(row)] =  '0'
-            sheet['H'+str(row)].font +=  number_format
-            sheet['H'+str(row)].alignment += alignmentNumber
-            sheet['I'+str(row)] =  '0'
-            sheet['I'+str(row)].font +=  number_format
-            sheet['I'+str(row)].alignment += alignmentNumber
-            sheet['J'+str(row)] =  '0'
-            sheet['J'+str(row)].font +=  number_format
-            sheet['J'+str(row)].alignment += alignmentNumber
-            sheet['K'+str(row)] =  '0'
-            sheet['K'+str(row)].font +=  number_format
-            sheet['K'+str(row)].alignment += alignmentNumber
-            sheet['L'+str(row)] =  'NE'
-            sheet['L'+str(row)].font +=  number_format
-            sheet['L'+str(row)].alignment += alignmentNumber
-            sheet['M'+str(row)] =  'NE'
-            sheet['M'+str(row)].font +=  number_format
-            sheet['M'+str(row)].alignment += alignmentNumber
-            sheet['N'+str(row)] =  'NE'
-            sheet['N'+str(row)].font +=  number_format
-            sheet['N'+str(row)].alignment += alignmentNumber
-            sheet['O'+str(row)] =  '0'
-            sheet['O'+str(row)].font +=  number_format
-            sheet['O'+str(row)].alignment += alignmentNumber
-            sheet['P'+str(row)] =  '0'
-            sheet['P'+str(row)].font +=  number_format
-            sheet['P'+str(row)].alignment += alignmentNumber
-            sheet['Q'+str(row)] =  '0'
-            sheet['Q'+str(row)].font +=  number_format
-            sheet['Q'+str(row)].alignment += alignmentNumber
-            sheet['R'+str(row)] =  '0'
-            sheet['R'+str(row)].font +=  number_format
-            sheet['R'+str(row)].alignment += alignmentNumber
-            sheet['S'+str(row)] =  '0'
-            sheet['S'+str(row)].font +=  number_format
-            sheet['S'+str(row)].alignment += alignmentNumber
+                mes1 = round((self.obtenerEvaCond(empleado[1],periodos[0][0])[0]),1)
+                mes2 = round((self.obtenerEvaCond(empleado[1],periodos[1][0])[0]),1)
+                mes3 = round((self.obtenerEvaCond(empleado[1],periodos[2][0])[0]),1)
 
-            idsperiodos =  []
-            periodos = list(self.getPeriodo())
-            idsperiodos.append(periodos[0][0])
-            idsperiodos.append(periodos[1][0])
-            idsperiodos.append(periodos[2][0])  
-            vacacionesmAnt1 = 0
-            vacacionesm1 = 0
-            vacacionesm2 = 0
-            vacacionesm3 = 0
-            vacaciones = self.getVacacionesMT(empleado[1])                   
-            for v in vacaciones:               
-                if v[2] in idsperiodos:
-                    if idsperiodos.index(v[2]) == 0:
-                        vacacionesm1 =  v[0] 
-                    if idsperiodos.index(v[2]) == 1:
-                        vacacionesm2 =  v[0]
-                    if idsperiodos.index(v[2]) == 2:
-                        vacacionesm3 =  v[0]
+                # if salariomes1 == 0 and mes1 != 'NE':
+                #     return messagebox.showwarning('Error en evaluación', f'El empleado {empleado[3]} no tiene pago en el mes {periodos[0][1]} debe estar como NE')
+                # if salariomes1 != 0 and mes1 == 'NE':
+                #     return messagebox.showwarning('Error en evaluación', f'El empleado {empleado[3]} debe ser evaluado en el mes {periodos[0][1]} debido a que cuenta con un salario devengado')
+                sheet['N'+str(row)] = mes1
+
+                # if salariomes2 == 0 and mes2 != 'NE':
+                #     return messagebox.showwarning('Error en evaluación', f'El empleado {empleado[3]} no tiene pago en el mes {periodos[1][1]} debe estar como NE')
+                # if salariomes2 != 0 and mes2 == 'NE':
+                #     return messagebox.showwarning('Error en evaluación', f'El empleado {empleado[3]} debe ser evaluado en el mes {periodos[1][1]} debido a que cuenta con un salario devengado')              
+                sheet['O'+str(row)] = mes2
+                
+                # if salariomes3 == 0 and mes3 != 'NE':
+                #     return messagebox.showwarning('Error en evaluación', f'El empleado {empleado[3]} no tiene pago en el mes {periodos[2][1]} debe estar como NE')
+                # if salariomes3 != 0 and mes3 == 'NE':
+                #     return messagebox.showwarning('Error en evaluación', f'El empleado {empleado[3]} debe ser evaluado en el mes {periodos[2][1]} debido a que cuenta con un salario devengado')
+                sheet['P'+str(row)] = mes3
+                
+
+
+                promEva = self.calcCoeficienteEva(empleado[1])
+                sheet['Q'+str(row)] = promEva
+                if promEva == 2:
+                    sheet['R'+str(row)] = 0
                 else:
-                    vacacionesmAnt1 =  v[0]
+                    sheet['R'+str(row)] = promEva
+                
+                #Calculo del salario base de cada trabajador
+                sheet['S'+str(row)] = f'=M{row}*R{row}'
+                
+                
 
-            salariomes1 = 0
-            horasmes1 = 0
-            salariomes2 = 0
-            horasmes2 = 0
-            salariomes3 = 0 
-            horasmes3 = 0           
-            salarios = list(self.getpagoSalMT(empleado[1]))
-            for sal in salarios:
-                if idsperiodos.index(sal[3]) == 0:
-                    salariomes1 =  sal[0] - sal[2]
-                    horasmes1 = sal[1]
-                if idsperiodos.index(sal[3]) == 1:
-                    salariomes2 =  sal[0] - sal[2]
-                    horasmes2 = sal[1]
-                if idsperiodos.index(sal[3]) == 2:
-                    salariomes3 =  sal[0] - sal[2]
-                    horasmes3 = sal[1]
+                row += 1
+                controw += 1
+            sheet['K3'] = f'=SUM(S6:S{row+6})'
+            sheet['M3'] = f'=I3/K3'
+            sheet['M3'].number_format ='#,##0.00000'
 
-            sheet['E'+str(row)] =  horasmes1
-            sheet['G'+str(row)] =  horasmes2
-            sheet['I'+str(row)] =  horasmes3
+            for i in range(6,row):
+                sheet['T'+str(i)] = sheet['M3'].value
+                sheet['U'+str(i)] = f'=round((S{i}*T{i}),2)'
 
-            sheet['F'+str(row)] =  Decimal(vacacionesmAnt1)+Decimal(vacacionesm1)+Decimal(salariomes1)
-            sheet['H'+str(row)] =  Decimal(vacacionesm2)+Decimal(salariomes2)
-            sheet['J'+str(row)] =  Decimal(vacacionesm3)+Decimal(salariomes3)
-
-            sheet['K'+str(row)] =  round((((Decimal(vacacionesmAnt1)+Decimal(vacacionesm1)+Decimal(salariomes1))+(Decimal(vacacionesm2)+Decimal(salariomes2))+(Decimal(vacacionesm3)+Decimal(salariomes3)))/3),2)
             
-            sheet['L'+str(row)] = round((self.obtenerEvaCond(empleado[1],periodos[0][0])[0]),1)
-            sheet['M'+str(row)] = round((self.obtenerEvaCond(empleado[1],periodos[1][0])[0]),1)
-            sheet['N'+str(row)] = round((self.obtenerEvaCond(empleado[1],periodos[2][0])[0]),1)
-            sheet['O'+str(row)] = round(self.calcCoeficienteEva(empleado[1]),1)
-            sheet['P'+str(row)] = round(self.calcCoeficienteEva(empleado[1]),1)
-            
-            #Calculo del salario base de cada trabajador
-            sheet['Q'+str(row)] = f'=K{row}*P{row}'
-            
-            
-
-            row += 1
-            controw += 1
-        sheet['I3'] = f'=SUM(Q6:Q{row+6})'
-        sheet['K3'] = f'=G3/I3'
-
-        for i in range(6,row):
-            sheet['R'+str(i)] = sheet['K3'].value
-            sheet['S'+str(i)] = f'=round((Q{i}*R{i}),2)'
-
-        
-        wb.save(path)
-        separador = os.path.sep
-        dir_actual = os.path.dirname(os.path.abspath(__file__))
-        dir = separador.join(dir_actual.split(separador)[:-1])
-        dirfile = separador.join(path.split(separador))
-        command =  ['open', dir+separador+dirfile]
-        subprocess.run(command,shell=False)
+            wb.save(path)
+            separador = os.path.sep
+            dir_actual = os.path.dirname(os.path.abspath(__file__))
+            dir = separador.join(dir_actual.split(separador)[:-1])
+            dirfile = separador.join(path.split(separador))
+            command =  ['open', dir+separador+dirfile]
+            subprocess.run(command,shell=False)
+        else:
+            messagebox.showwarning('Campo vacío','Debe indicar el monto a distribuir')
         
 
 
@@ -533,7 +577,7 @@ class FormularioCalcUtilidadesDesign():
             else:
                 return messagebox.showinfo('Notificación',"'Trabajador '"+emp+"'No tiene registro de evaluación en el mes de "+str(periodo[1]))
         if countDiv > 0: 
-            coeficiente = round((sumeva/countDiv),1)
+            coeficiente = sumeva/countDiv
             if coeficiente >2:
                 return coeficiente        
         return coeficiente
