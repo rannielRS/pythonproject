@@ -6,7 +6,7 @@ import os
 import subprocess
 from PIL import Image, ImageTk
 import openpyxl
-
+from openpyxl.styles import Font, colors, fills, Alignment, PatternFill, NamedStyle
 
 
 class FormularioCargarEDesign():
@@ -248,11 +248,23 @@ class FormularioCargarEDesign():
         wb.save(path)
         
     def mostrarListado(self):         
-        path = "file/Listado de trabajadores1.xlsx"
+        path = "file/list_trabajadores.xlsx"
         self.limpiarExcel(5,path)
         wb = openpyxl.load_workbook(path)
 
         sheet = wb.active
+        alignmentText = Alignment(horizontal=LEFT)
+        alignmentNumber = Alignment(horizontal=CENTER)
+        text_format = Font(
+        bold = False,
+        name = 'Calibri',
+        size = '0',
+        color = colors.BLACK )   
+        number_format = Font(
+        bold = False,
+        name = 'Calibri',
+        size = '0',
+        color = colors.BLACK) 
         row = 5
         for parent in self.treeE.get_children():
             #Insertar empleados
@@ -262,6 +274,8 @@ class FormularioCargarEDesign():
             sheet['B'+str(row)]=values[0]
             sheet['C'+str(row)]=values[1]
             sheet['D'+str(row)]=values[2]
+            sheet['D'+str(row)].font +=  text_format
+            sheet['D'+str(row)].alignment += alignmentText
             sheet['E'+str(row)]=values[3]
             sheet['F'+str(row)]=values[4]
             if tag[0] == 'checked':
@@ -272,13 +286,21 @@ class FormularioCargarEDesign():
             row+=1
 
         wb.save(path)
-        separador = os.path.sep
-        dir_actual = os.path.dirname(os.path.abspath(__file__))
-        dir = separador.join(dir_actual.split(separador)[:-1])
-        dirfile = separador.join(path.split(separador))
-        print(dir+separador+path)
-        command =  ['open', dir+separador+dirfile]
-        subprocess.run(command,shell=False)
+        self.convert_xlsx_to_pdf(path)
+
+    def convert_xlsx_to_pdf(self,xlsx_file):
+        try:
+            subprocess.run(["libreoffice24.2", "--headless", "--convert-to", "pdf", xlsx_file])
+            separador = os.path.sep
+            dir_actual = os.path.dirname(os.path.abspath(__file__))
+            dir = separador.join(dir_actual.split(separador)[:-1])
+            #dirfile = separador.join(xlsx_file.split(separador))
+            command =  ['open', dir+separador+'list_trabajadores.pdf']
+            subprocess.run(command,shell=False)
+            print("Done!")
+
+        except Exception as e:
+            print("Error:", e)
 
     def getDepartamento(self,idemp):         
         queryP="SELECT a.area  FROM postgres.public.empleado emp INNER JOIN postgres.public.area AS a ON emp.empleado_area_id  = a.id where emp.id = "+str(idemp)

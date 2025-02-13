@@ -277,18 +277,23 @@ class FormularioEvaluacionDesign():
 
             row+=1
         wb.save(path)
-        separador = os.path.sep
-        dir_actual = os.path.dirname(os.path.abspath(__file__))
-        dir = separador.join(dir_actual.split(separador)[:-1])
-        dirfile = separador.join(path.split(separador))
-        print(dir+separador+path)
-        command =  ['open', dir+separador+dirfile]
-        subprocess.run(command,shell=False)
+        self.convert_xlsx_to_pdf(path)
 
-    def getDepartamento(self,idemp):         
-        queryP="SELECT a.area  FROM postgres.public.empleado emp INNER JOIN postgres.public.area AS a ON emp.empleado_area_id  = a.id where emp.id = "+str(idemp)
-        self.cursorLoc.execute(queryP)
-        return self.cursorLoc.fetchone()[0]
+    def convert_xlsx_to_pdf(self,xlsx_file):
+        try:
+            subprocess.run(["libreoffice24.2", "--headless", "--convert-to", "pdf", xlsx_file])
+            separador = os.path.sep
+            dir_actual = os.path.dirname(os.path.abspath(__file__))
+            dir = separador.join(dir_actual.split(separador)[:-1])
+            #dirfile = separador.join(xlsx_file.split(separador))
+            command =  ['open', dir+separador+'evaluacion.pdf']
+            subprocess.run(command,shell=False)
+            print("Done!")
+
+        except Exception as e:
+            print("Error:", e)
+
+    
 
     def limpiarExcel(self,fila,url):         
         path = url

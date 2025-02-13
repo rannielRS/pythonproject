@@ -8,6 +8,8 @@ from openpyxl.styles import Font, colors, fills, Alignment, PatternFill, NamedSt
 import subprocess
 import os
 
+
+
 class FormularioCalcUtilidadesDesign():
 
     def __init__(self, panel_principal):   
@@ -437,19 +439,34 @@ class FormularioCalcUtilidadesDesign():
 
             for i in range(6,row):
                 sheet['T'+str(i)] = sheet['M3'].value
-                sheet['U'+str(i)] = f'=round((S{i}*T{i}),2)'
+                sheet['U'+str(i)] = f'=rounddown((S{i}*T{i}),2)'
 
             
             wb.save(path)
-            separador = os.path.sep
-            dir_actual = os.path.dirname(os.path.abspath(__file__))
-            dir = separador.join(dir_actual.split(separador)[:-1])
-            dirfile = separador.join(path.split(separador))
-            command =  ['open', dir+separador+dirfile]
-            subprocess.run(command,shell=False)
+            # separador = os.path.sep
+            # dir_actual = os.path.dirname(os.path.abspath(__file__))
+            # dir = separador.join(dir_actual.split(separador)[:-1])
+            # dirfile = separador.join(path.split(separador))
+            # command =  ['open', dir+separador+dirfile]
+            # subprocess.run(command,shell=False)
+
+            self.convert_xlsx_to_pdf(path)
         else:
             messagebox.showwarning('Campo vacío','Debe indicar el monto a distribuir')
         
+    def convert_xlsx_to_pdf(self,xlsx_file):
+        try:
+            subprocess.run(["libreoffice24.2", "--headless", "--convert-to", "pdf", xlsx_file])
+            separador = os.path.sep
+            dir_actual = os.path.dirname(os.path.abspath(__file__))
+            dir = separador.join(dir_actual.split(separador)[:-1])
+            #dirfile = separador.join(xlsx_file.split(separador))
+            command =  ['open', dir+separador+'utilidades_dist.pdf']
+            subprocess.run(command,shell=False)
+            print("Done!")
+
+        except Exception as e:
+            print("Error:", e)
 
 
 
