@@ -450,18 +450,18 @@ class FormularioCalcUtilidadesDesign():
             # command =  ['open', dir+separador+dirfile]
             # subprocess.run(command,shell=False)
 
-            self.convert_xlsx_to_pdf(path)
+            self.convert_xlsx_to_pdf(path,"utilidades_dist")
         else:
             messagebox.showwarning('Campo vacío','Debe indicar el monto a distribuir')
         
-    def convert_xlsx_to_pdf(self,xlsx_file):
+    def convert_xlsx_to_pdf(self,xlsx_file,nombreA=''):
         try:
             subprocess.run(["libreoffice24.2", "--headless", "--convert-to", "pdf", xlsx_file])
             separador = os.path.sep
             dir_actual = os.path.dirname(os.path.abspath(__file__))
             dir = separador.join(dir_actual.split(separador)[:-1])
             #dirfile = separador.join(xlsx_file.split(separador))
-            command =  ['open', dir+separador+'utilidades_dist.pdf']
+            command =  ['open', dir+separador+nombreA+'.pdf']
             subprocess.run(command,shell=False)
             print("Done!")
 
@@ -677,13 +677,14 @@ class FormularioCalcUtilidadesDesign():
             row += 1
             controw += 1
         wb.save(path)
-        separador = os.path.sep
-        dir_actual = os.path.dirname(os.path.abspath(__file__))
-        dir = separador.join(dir_actual.split(separador)[:-1])
-        dirfile = separador.join(path.split(separador))
+        self.convert_xlsx_to_pdf(path,'resumen_detalle_min')
+        # separador = os.path.sep
+        # dir_actual = os.path.dirname(os.path.abspath(__file__))
+        # dir = separador.join(dir_actual.split(separador)[:-1])
+        # dirfile = separador.join(path.split(separador))
         
-        command =  ['open', dir+separador+dirfile]
-        subprocess.run(command,shell=False)
+        # command =  ['open', dir+separador+dirfile]
+        # subprocess.run(command,shell=False)
 
 
 
