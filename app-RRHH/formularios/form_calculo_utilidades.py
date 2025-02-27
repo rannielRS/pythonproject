@@ -549,16 +549,17 @@ class FormularioCalcUtilidadesDesign():
         return self.cursorLoc.fetchone()[0]
 
     def showResumen(self): 
-        self.limpiarResumenCalcLoc()
-        queryP="SELECT emp.id,emp.nombreap,emp.ci,a.area  FROM postgres.public.empleado emp INNER JOIN postgres.public.area AS a ON emp.empleado_area_id  = a.id"
-        self.cursorLoc.execute(queryP)
-        empList = self.cursorLoc.fetchall()
-        for emp in empList:
+        path = "file/utilidades_dist.xlsx"
+        row = 6   
+        wb = openpyxl.load_workbook(path,data_only=True)
+        sheet = wb.active
+        for line in range(row,sheet.max_row-1):
             mtvacaciones = 0
             mtsalario = 0
             horast = 0
-            listSal = self.getpagoSalMT(emp[0])
-            listVaca = self.getVacacionesMT(emp[0])
+            temp = sheet['C'+str(line)].value
+            listSal = self.getpagoSalMT(sheet['C'+str(line)].value)
+            listVaca = self.getVacacionesMT(sheet['C'+str(line)].value)
             for rowsal in listSal:
                 mtsalario += rowsal[0]
                 horast += rowsal[1]
@@ -566,11 +567,15 @@ class FormularioCalcUtilidadesDesign():
                 mtvacaciones += rowvaca[0]
             queryInsertRe = "INSERT INTO postgres.public.resumen_calculo_utilidades\
                 (resumen_empleado_id,resumen_utilidadesd_id,mtvacaciones,mtsalario,horastt,coeficienteeva_utilidades,descrip_coeficiente,devengado)\
-                    VALUES ('"+emp[0]+"',"+str(self.getUtiliDist()[0])+","+str(round(mtvacaciones,2))+","+str(round(mtsalario,2))+","+str(round(horast,2))+","+str(round(self.calcCoeficienteEva(emp[0]),2))+",'',"+str(round((Decimal(mtsalario)+Decimal(mtvacaciones)),2))+")"
-            self.cursorLoc.execute(queryInsertRe)
-            self.connLoc.commit()
+                    VALUES ('"+sheet['C'+str(line)].value+"',"+str(self.getUtiliDist()[0])+","+str(round(mtvacaciones,2))+","+str(round(mtsalario,2))+","+str(round(horast,2))+","+str(sheet['R'+str(line)].value)+",'',"+str(sheet['U'+str(line)].value)+")"
+            print(queryInsertRe)
+            print(line)
+            #self.cursorLoc.execute(queryInsertRe)
+            #self.connLoc.commit()
         self.actualizartreeEUtil()
-        self.resumendetallemin()
+
+
+
         
 
     #Obtener informacion del Periodo de utilidades definido        
