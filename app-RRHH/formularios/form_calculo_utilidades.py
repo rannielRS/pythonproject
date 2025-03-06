@@ -7,6 +7,7 @@ import openpyxl
 from openpyxl.styles import Font, colors, fills, Alignment, PatternFill, NamedStyle
 import subprocess
 import os
+import math
 
 
 
@@ -32,14 +33,14 @@ class FormularioCalcUtilidadesDesign():
 
             # Definiendo monto de distribucion de utilidades
             self.tb_monto = tk.Label(panel_principal, font=('Times', 12), bg=COLOR_CUERPO_PRINCIPAL, text='Monto a distribuir:')
-            self.tb_monto.place(x=750, y=305)
+            self.tb_monto.place(x=750, y=235)
 
             self.tx_distribuir = ttk.Entry(panel_principal, font=('Times', 14), width=13)
-            self.tx_distribuir.place(x=875, y=300) 
+            self.tx_distribuir.place(x=875, y=230) 
 
             self.btn_utilidades = tk.Button(panel_principal, text="Reporte de utilidades", font=(
                 'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.distribuirUtil)
-            self.btn_utilidades.place(x=750, y=350)
+            self.btn_utilidades.place(x=750, y=330)
 
             #Boton para buscar empleados        
             self.btn_bempleados = tk.Button(panel_principal, text="Buscar", font=(
@@ -50,6 +51,10 @@ class FormularioCalcUtilidadesDesign():
             #Label mostrasr total de registros
             self.tx_total = tk.Label(panel_principal, font=('Times', 18), bg=COLOR_CUERPO_PRINCIPAL, text='Total de registros: 0')
             self.tx_total.place(x=750, y=140)
+
+            #Label mostrasr total de registros
+            self.tx_diferencia = tk.Label(panel_principal, font=('Times', 12), bg=COLOR_CUERPO_PRINCIPAL, text='Diferencia: 0')
+            self.tx_diferencia.place(x=750, y=260)
             
             #Para buscar por departamento
             #Label departamento
@@ -75,7 +80,7 @@ class FormularioCalcUtilidadesDesign():
             #Boton mostrar resumen        
             self.btn_showResume = tk.Button(panel_principal, text="Mostrar resumen", font=(
                 'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.showResumen)
-            self.btn_showResume.place(x=750, y=230)                 
+            self.btn_showResume.place(x=750, y=280)                 
             
 
             #Treeview        
@@ -120,7 +125,7 @@ class FormularioCalcUtilidadesDesign():
         #print(tdestajo)
         return tdestajo
 
-    #Definiendo tree view de periodo
+    #Definiendo registro de salario
     def regSal(self):                
         queryEmpL=''
         countReg = 0
@@ -421,7 +426,7 @@ class FormularioCalcUtilidadesDesign():
 
                 promEva = self.calcCoeficienteEva(empleado[1])
                 sheet['Q'+str(row)] = promEva
-                if promEva == 2:
+                if promEva <= 2:
                     sheet['R'+str(row)] = 0
                 else:
                     sheet['R'+str(row)] = promEva
@@ -548,30 +553,59 @@ class FormularioCalcUtilidadesDesign():
         self.cursorLoc.execute(queryP)
         return self.cursorLoc.fetchone()[0]
 
-    def showResumen(self): 
-        path = "file/utilidades_dist.xlsx"
-        row = 6   
-        wb = openpyxl.load_workbook(path,data_only=True)
-        sheet = wb.active
-        for line in range(row,sheet.max_row-1):
+    def showResumen(self):  
+        self.limpiarResumenCalcLoc()       
+        queryP="SELECT emp.id,emp.nombreap,emp.ci,a.area  FROM postgres.public.empleado emp INNER JOIN postgres.public.area AS a ON emp.empleado_area_id  = a.id ORDER BY a.id"
+        self.cursorLoc.execute(queryP)
+        sumasaldevt = 0
+        empList = self.cursorLoc.fetchall()
+        registro_salcalc = []
+        utilidades_distrib = self.tx_distribuir.get()
+        if utilidades_distrib == '':
+            return messagebox.showinfo('Campo requerido','Debe indicar el monto a distribuir')
+        sumasalcalc = 0
+        coeficiente_distribuir = 0
+        for emp in empList:
             mtvacaciones = 0
             mtsalario = 0
             horast = 0
-            temp = sheet['C'+str(line)].value
-            listSal = self.getpagoSalMT(sheet['C'+str(line)].value)
-            listVaca = self.getVacacionesMT(sheet['C'+str(line)].value)
+            coeficienteEva = 0
+            listSal = self.getpagoSalMT(emp[0])
+            listVaca = self.getVacacionesMT(emp[0])
             for rowsal in listSal:
-                mtsalario += rowsal[0]
+                mtsalario += rowsal[0] - rowsal[2]
                 horast += rowsal[1]
             for rowvaca in listVaca:
                 mtvacaciones += rowvaca[0]
+
+            promEva = self.calcCoeficienteEva(emp[0])
+            if promEva <= 2:
+                coeficienteEva = 0
+            else:
+                coeficienteEva = promEva
+            salcalc = round((((Decimal(mtsalario) + Decimal(mtvacaciones))/3)*Decimal(coeficienteEva)),2)
+            registro_salcalc.append((emp[0],salcalc,mtsalario,mtvacaciones,horast))
+
+        for empsalp in registro_salcalc:
+            sumasalcalc += empsalp[1]
+
+        coeficiente_distribuir = Decimal(utilidades_distrib)/Decimal(sumasalcalc)
+
+        for listE in registro_salcalc:
+            saldevT = listE[1] * coeficiente_distribuir
+            sumasaldevt += saldevT
             queryInsertRe = "INSERT INTO postgres.public.resumen_calculo_utilidades\
                 (resumen_empleado_id,resumen_utilidadesd_id,mtvacaciones,mtsalario,horastt,coeficienteeva_utilidades,descrip_coeficiente,devengado)\
-                    VALUES ('"+sheet['C'+str(line)].value+"',"+str(self.getUtiliDist()[0])+","+str(round(mtvacaciones,2))+","+str(round(mtsalario,2))+","+str(round(horast,2))+","+str(sheet['R'+str(line)].value)+",'',"+str(sheet['U'+str(line)].value)+")"
-            print(queryInsertRe)
-            print(line)
-            #self.cursorLoc.execute(queryInsertRe)
-            #self.connLoc.commit()
+                    VALUES ('"+str(listE[0])+"',"+str(self.getUtiliDist()[0])+","+str(round(listE[3],2))+","+str(round(listE[2],2))+","+str(round(listE[4],2))+","+str(self.calcCoeficienteEva(listE[0]))+",'',"+str(round(saldevT,2))+")"
+            
+            self.cursorLoc.execute(queryInsertRe)
+            self.connLoc.commit()
+        print(coeficiente_distribuir)
+        print(sumasalcalc)
+        print(sumasaldevt)
+
+        diferencia = Decimal(utilidades_distrib)-round(sumasaldevt,2)
+        self.tx_diferencia['text'] = 'Diferencia: '+str(diferencia)
         self.actualizartreeEUtil()
 
 

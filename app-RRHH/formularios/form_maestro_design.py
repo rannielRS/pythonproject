@@ -8,9 +8,9 @@ import util.util_imagenes as util_img
 # Nuevo
 from formularios.form_registrop_design import FormularioRegistroPDesign
 from formularios.form_evaluacion_design import FormularioEvaluacionDesign
-from formularios.form_info_design import FormularioInfoDesign
 from formularios.form_cargaremp_design import FormularioCargarEDesign
 from formularios.form_calculo_utilidades import FormularioCalcUtilidadesDesign
+from formularios.form_op_design import FormularioOtrosPagosDesign
 
 class FormularioMaestroDesign(tk.Tk):
 
@@ -87,19 +87,19 @@ class FormularioMaestroDesign(tk.Tk):
 
         # Botones del menú lateral
         
-        self.buttonDashBoard = tk.Button(self.menu_lateral)        
-        self.buttonProfile = tk.Button(self.menu_lateral)        
-        self.buttonPicture = tk.Button(self.menu_lateral)
-        self.buttonInfo = tk.Button(self.menu_lateral)        
-        self.buttonSettings = tk.Button(self.menu_lateral)
+        self.buttonRP = tk.Button(self.menu_lateral)        
+        self.buttonIE = tk.Button(self.menu_lateral)        
+        self.buttonET = tk.Button(self.menu_lateral)
+        self.buttonDU = tk.Button(self.menu_lateral)        
+        self.buttonOP = tk.Button(self.menu_lateral)
        
 
         buttons_info = [
-            ("Registrar período", "\uf109", self.buttonDashBoard,self.abrir_registrar_p),
-            ("Importar empleados", "\uf007", self.buttonProfile,self.abrir_cargarEmp),
-            ("Evaluar trabajador", "\uf03e", self.buttonPicture,self.abrir_evaluacion),
-            ("Distribuir utilidades", "\uf129", self.buttonInfo,self.abrir_calc_util),
-            #("Settings", "\uf013", self.buttonSettings,self.abrir_panel_en_construccion)
+            ("Registrar período", "\uf109", self.buttonRP,self.abrir_registrar_p),
+            ("Importar empleados", "\uf007", self.buttonIE,self.abrir_cargarEmp),
+            ("Evaluar trabajador", "\uf03e", self.buttonET,self.abrir_evaluacion),
+            ("Distribuir utilidades", "\uf129", self.buttonDU,self.abrir_calc_util),
+            ("Otros pagos", "\uf013", self.buttonOP,self.abrir_otros_pagos)
         ]
 
         for text, icon, button,comando in buttons_info:
@@ -152,7 +152,11 @@ class FormularioMaestroDesign(tk.Tk):
 
     def abrir_calc_util(self):  
         self.limpiar_panel(self.cuerpo_principal)          
-        FormularioCalcUtilidadesDesign(self.cuerpo_principal)               
+        FormularioCalcUtilidadesDesign(self.cuerpo_principal)   
+
+    def abrir_otros_pagos(self):  
+        self.limpiar_panel(self.cuerpo_principal)          
+        FormularioOtrosPagosDesign(self.cuerpo_principal) 
 
     def limpiar_panel(self,panel):
     # Función para limpiar el contenido del panel

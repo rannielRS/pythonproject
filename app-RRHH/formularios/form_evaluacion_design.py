@@ -124,13 +124,13 @@ class FormularioEvaluacionDesign():
         self.treeE.delete(*self.treeE.get_children())         
         queryEmpL=''
         if self.tx_empleado.get() != '' and self.cb_area.get() == '':
-            queryEmpL="SELECT x.id,x.nombreap,x.ci,a.area FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id where x.nombreap like '%"+self.tx_empleado.get().upper()+"%'"
+            queryEmpL="SELECT x.id,x.nombreap,x.ci,a.area FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id where x.nombreap like '%"+self.tx_empleado.get().upper()+"% ORDER BY a.id'"
         elif self.cb_area.get() != '' and self.tx_empleado.get() == '':
-            queryEmpL="SELECT x.id,x.nombreap,x.ci,a.area FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id where a.area = '"+self.cb_area.get()+"'"
+            queryEmpL="SELECT x.id,x.nombreap,x.ci,a.area FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id where a.area = '"+self.cb_area.get()+" ORDER BY a.id'"
         elif self.tx_empleado.get() != '' and self.cb_area.get() != '':
-            queryEmpL="SELECT x.id,x.nombreap,x.ci,a.area FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id where x.nombreap like '%"+self.tx_empleado.get().upper()+"%' and a.area = '"+self.cb_area.get()+"'"
+            queryEmpL="SELECT x.id,x.nombreap,x.ci,a.area FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id where x.nombreap like '%"+self.tx_empleado.get().upper()+"%' and a.area = '"+self.cb_area.get()+" ORDER BY a.id'"
         else:
-            queryEmpL='SELECT x.id,x.nombreap,x.ci,a.area FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id'
+            queryEmpL='SELECT x.id,x.nombreap,x.ci,a.area FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id  ORDER BY a.id'
         
          
         self.cursorLoc.execute(queryEmpL)
