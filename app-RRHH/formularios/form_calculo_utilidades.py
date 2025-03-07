@@ -63,7 +63,7 @@ class FormularioCalcUtilidadesDesign():
 
             #Combo departamento
             self.cb_departamento= ttk.Combobox(panel_principal, width=30)
-            self.cb_departamento.bind('<<ComboboxSelected>>', self.actualizartreeEUtil)
+            self.cb_departamento.bind('<<ComboboxSelected>>', self.actualizartreeEUtil1)
             #self.cb_periodo.current(0)
             self.cb_departamento.place(x=520, y=5)
 
@@ -490,11 +490,14 @@ class FormularioCalcUtilidadesDesign():
         self.cursorLoc.execute(queryDemp)
         self.connLoc.commit()
 
+    def actualizartreeEUtil1(self,event):
+        self.actualizartreeEUtil()
+    
     def actualizartreeEUtil(self):
         self.treeEUtil.delete(*self.treeEUtil.get_children())         
         queryEmpL=''
         if self.tx_empleado.get() != '' and self.cb_departamento.get() == '':
-            queryEmpL="SELECT x.id,x.nombreap,x.ci,rc.mtsalario,rc.mtvacaciones,rc.horastt,rc.coeficienteeva_utilidades,rc.devengado FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.id = a.id INNER JOIN postgres.public.resumen_calculo AS rc ON x.id = rc.resumen_empleado_id where x.nombreap like '%"+self.tx_empleado.get().upper()+"%' ORDER BY a.id ASC"
+            queryEmpL="SELECT x.id,x.nombreap,x.ci,rc.mtsalario,rc.mtvacaciones,rc.horastt,rc.coeficienteeva_utilidades,rc.devengado FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id INNER JOIN postgres.public.resumen_calculo_utilidades AS rc ON x.id = rc.resumen_empleado_id where x.nombreap like '%"+self.tx_empleado.get().upper()+"%' ORDER BY a.id ASC"
         elif self.cb_departamento.get() != '' and self.tx_empleado.get() == '':
             queryEmpL="SELECT x.id,x.nombreap,x.ci,rc.mtsalario,rc.mtvacaciones,rc.horastt,rc.coeficienteeva_utilidades,rc.devengado FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id INNER JOIN postgres.public.resumen_calculo_utilidades AS rc ON x.id = rc.resumen_empleado_id where a.area = '"+self.cb_departamento.get()+"' ORDER BY a.id ASC"
         elif self.tx_empleado.get() != '' and self.cb_departamento.get() != '':

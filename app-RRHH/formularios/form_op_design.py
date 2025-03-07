@@ -5,8 +5,12 @@ from config import COLOR_CUERPO_PRINCIPAL, COLOR_BARRA_SUPERIOR,CONN_LOC,CURSOR_
 import openpyxl
 import os
 import subprocess
-class FormularioOtrosPagosDesign():
+import tkinter.font as tkfont
 
+
+
+class FormularioOtrosPagosDesign():
+    
     def __init__(self, panel_principal):   
        
         #Definiendo variables
@@ -16,6 +20,8 @@ class FormularioOtrosPagosDesign():
         if self.getPeriodo():
             
             # Definiendo controles de seleccion
+            self.store = self.cargarTP()
+            
             self.tx_empleado_op = ttk.Entry(panel_principal, font=('Times', 14), width=10)
             self.tx_empleado_op.grid(row=0,column=0,padx=5,pady=5,ipadx=40)
 
@@ -51,24 +57,24 @@ class FormularioOtrosPagosDesign():
 
             #label empleado
             self.lb_sempleado_op = tk.Label(panel_principal, text='Empleado seleccionado', justify='right', bg=COLOR_CUERPO_PRINCIPAL, font=('Times', 12), width=25)
-            self.lb_sempleado_op.place(x=800, y=100)       
+            self.lb_sempleado_op.place(x=715, y=100)       
             
             #label tipo pago
-            self.lb_tp_op = tk.Label(panel_principal, text='Mes 1', justify='right', bg=COLOR_CUERPO_PRINCIPAL, font=('Times', 12), width=10)
-            self.lb_tp_op.place(x=784, y=150)
+            self.lb_tp_op = tk.Label(panel_principal, text='Tipo de pago:', justify='right', bg=COLOR_CUERPO_PRINCIPAL, font=('Times', 12), width=12)
+            self.lb_tp_op.place(x=710, y=151)
             #label mes2
-            self.lb_monto_op = tk.Label(panel_principal, text='Mes 2', justify='right', bg=COLOR_CUERPO_PRINCIPAL, font=('Times', 12), width=10)
-            self.lb_monto_op.place(x=784, y=200)
+            self.lb_monto_op = tk.Label(panel_principal, text='Monto:', justify='right', bg=COLOR_CUERPO_PRINCIPAL, font=('Times', 12), width=10)
+            self.lb_monto_op.place(x=700, y=201)
             
 
             #ComboEva x mes
-            self.cb_tp_op = ttk.Combobox(panel_principal, postcommand=self.cargarTP, width=10)
-            #self.cb_periodo.current(0)
-            self.cb_tp_op.place(x=870, y=150)
+            self.cb_tp_op = ttk.Combobox(panel_principal, values = self.store, postcommand=self.cargarTP, width=21)
+            self.cb_tp_op.bind('<Configure>', self.on_combo_configure)
+            self.cb_tp_op.place(x=808, y=150)
 
             self.tx_monto_op = ttk.Entry(panel_principal, font=('Times', 14), width=10)
             #self.cb_periodo.current(0)
-            self.tx_monto_op.place(x=870, y=200)
+            self.tx_monto_op.place(x=808, y=200)
       
             
 
@@ -91,10 +97,24 @@ class FormularioOtrosPagosDesign():
             self.treeEOP.grid(row=1,column=0, columnspan=5,ipadx=5,padx=5,pady=5)
             self.treeEOP.bind('<<TreeviewSelect>>',self.selectEmp)
             self.actualizartreeEOP()  
-            self.cargarTP()  
+              
             self.cargarDpto()   
         else:
             messagebox.showinfo('Notificación','Debe registrar un período de evaluación')
+
+    def on_combo_configure(self,event):
+        store = self.cargarTP()  
+        maxlet = 0
+        for el in store:
+            if len(el) > maxlet:
+                maxlet = len(el)
+        #font = tkfont.nametofont(str(event.widget.cget('font')))
+        width = maxlet
+        #width = font.measure(store[0] + "0") - event.width
+        style = ttk.Style()
+        style.configure('TCombobox', postoffset=(0,0,width,0))
+
+
 
 
     #Definiendo tree view de periodo
@@ -111,11 +131,11 @@ class FormularioOtrosPagosDesign():
         self.treeEOP.delete(*self.treeEOP.get_children())         
         queryEmpL=''
         if self.tx_empleado_op.get() != '' and self.cb_area_op.get() == '':
-            queryEmpL="SELECT x.id,x.nombreap,x.ci,a.area FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id where x.nombreap like '%"+self.tx_empleado_op.get().upper()+"% ORDER BY a.id'"
+            queryEmpL="SELECT x.id,x.nombreap,x.ci,a.area FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id where x.nombreap like '%"+self.tx_empleado_op.get().upper()+"%' ORDER BY a.id ASC"
         elif self.cb_area_op.get() != '' and self.tx_empleado_op.get() == '':
-            queryEmpL="SELECT x.id,x.nombreap,x.ci,a.area FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id where a.area = '"+self.cb_area_op.get()+" ORDER BY a.id'"
+            queryEmpL="SELECT x.id,x.nombreap,x.ci,a.area FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id where a.area = '"+self.cb_area_op.get()+"' ORDER BY a.id ASC"
         elif self.tx_empleado_op.get() != '' and self.cb_area_op.get() != '':
-            queryEmpL="SELECT x.id,x.nombreap,x.ci,a.area FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id where x.nombreap like '%"+self.tx_empleado_op.get().upper()+"%' and a.area = '"+self.cb_area_op.get()+" ORDER BY a.id'"
+            queryEmpL="SELECT x.id,x.nombreap,x.ci,a.area FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id where x.nombreap like '%"+self.tx_empleado_op.get().upper()+"%' and a.area = '"+self.cb_area_op.get()+"' ORDER BY a.id ASC"
         else:
             queryEmpL='SELECT x.id,x.nombreap,x.ci,a.area FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id  ORDER BY a.id'
         
@@ -134,7 +154,7 @@ class FormularioOtrosPagosDesign():
         curItem = self.treeEOP.focus()
         selectedItem=self.treeEOP.item(curItem)
         cadena=str(selectedItem['values'][0])+" "+str(selectedItem['values'][1])
-        if len(cadena) <26:
+        if len(cadena) < 26:
             self.lb_sempleado_op['text']=cadena
         else:
             self.lb_sempleado_op['text']=cadena[0:20]+"..."
@@ -146,9 +166,8 @@ class FormularioOtrosPagosDesign():
         self.cursorLoc.execute(queryP)
         slistTP=self.cursorLoc.fetchall()
         for row in slistTP:
-            options.append(str(row[0])+'-'+row[1])
-        
-        self.cb_tp_op['values']=options
+            options.append(str(row[0])+'-'+row[1])        
+        return options
     
     def cargarDpto(self):
         options=[]         
