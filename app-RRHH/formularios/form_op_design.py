@@ -69,7 +69,7 @@ class FormularioOtrosPagosDesign():
 
             #ComboEva x mes
             self.cb_tp_op = ttk.Combobox(panel_principal, values = self.store, postcommand=self.cargarTP, width=21)
-            self.cb_tp_op.bind('<Configure>', self.on_combo_configure)
+            #self.cb_tp_op.bind('<Configure>', self.on_combo_configure)
             self.cb_tp_op.place(x=808, y=150)
 
             self.tx_monto_op = ttk.Entry(panel_principal, font=('Times', 14), width=10)
@@ -109,10 +109,10 @@ class FormularioOtrosPagosDesign():
             if len(el) > maxlet:
                 maxlet = len(el)
         #font = tkfont.nametofont(str(event.widget.cget('font')))
-        width = maxlet
+        width = maxlet*2
         #width = font.measure(store[0] + "0") - event.width
         style = ttk.Style()
-        style.configure('TCombobox', postoffset=(0,0,width,0))
+        style.configure('TCombobox',(0,0,width,0))
 
 
 
