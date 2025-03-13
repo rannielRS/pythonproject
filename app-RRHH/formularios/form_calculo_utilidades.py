@@ -32,15 +32,15 @@ class FormularioCalcUtilidadesDesign():
             self.tx_empleado.grid(row=0,column=0,padx=5,pady=5,ipadx=40)
 
             # Definiendo monto de distribucion de utilidades
-            self.tb_monto = tk.Label(panel_principal, font=('Times', 12), bg=COLOR_CUERPO_PRINCIPAL, text='Monto a distribuir:')
-            self.tb_monto.place(x=750, y=235)
+            self.lb_monto = tk.Label(panel_principal, font=('Times', 12), bg=COLOR_CUERPO_PRINCIPAL, text='Monto a distribuir:')
+            self.lb_monto.place(x=750, y=400)
 
             self.tx_distribuir = ttk.Entry(panel_principal, font=('Times', 14), width=13)
-            self.tx_distribuir.place(x=875, y=230) 
+            self.tx_distribuir.place(x=875, y=400) 
 
             self.btn_utilidades = tk.Button(panel_principal, text="Reporte de utilidades", font=(
                 'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.distribuirUtil)
-            self.btn_utilidades.place(x=750, y=330)
+            self.btn_utilidades.place(x=750, y=490)
 
             #Boton para buscar empleados        
             self.btn_bempleados = tk.Button(panel_principal, text="Buscar", font=(
@@ -50,11 +50,11 @@ class FormularioCalcUtilidadesDesign():
             
             #Label mostrasr total de registros
             self.tx_total = tk.Label(panel_principal, font=('Times', 18), bg=COLOR_CUERPO_PRINCIPAL, text='Total de registros: 0')
-            self.tx_total.place(x=750, y=140)
+            self.tx_total.place(x=750, y=120)
 
             #Label mostrasr total de registros
             self.tx_diferencia = tk.Label(panel_principal, font=('Times', 12), bg=COLOR_CUERPO_PRINCIPAL, text='Diferencia: 0')
-            self.tx_diferencia.place(x=750, y=260)
+            self.tx_diferencia.place(x=750, y=425)
             
             #Para buscar por departamento
             #Label departamento
@@ -70,17 +70,27 @@ class FormularioCalcUtilidadesDesign():
             #Boton para registrar salario       
             self.btn_agSal = tk.Button(panel_principal, text="Registrar salario", font=(
                 'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.regSal)
-            self.btn_agSal.place(x=750, y=100)
+            self.btn_agSal.place(x=750, y=80)
 
             #Boton para registrar vacaciones        
             self.btn_agVaca = tk.Button(panel_principal, text="Registrar vacaciones", font=(
                 'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.regVac)
-            self.btn_agVaca.place(x=750, y=180)
+            self.btn_agVaca.place(x=750, y=160)
+
+            style = ttk.Style()   
+            
+            style.configure('TLabelframe', background=COLOR_CUERPO_PRINCIPAL, borderwidth=2, bodercolor='black')
+            style.configure('TLabelframe.Label', background=COLOR_CUERPO_PRINCIPAL)
+
+            #Label frame para las invalidadnte
+            lb_frame = ttk.Labelframe(panel_principal, text='Invalidantes del pago', width=255,height=185, style='TLabelframe')
+            lb_frame.place(x=735, y=200)
+
 
             #Boton mostrar resumen        
-            self.btn_showResume = tk.Button(panel_principal, text="Mostrar resumen", font=(
+            self.btn_showResume = tk.Button(panel_principal, text="Calcular resumen", font=(
                 'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.showResumen)
-            self.btn_showResume.place(x=750, y=280)                 
+            self.btn_showResume.place(x=750, y=450)                 
             
 
             #Treeview        
