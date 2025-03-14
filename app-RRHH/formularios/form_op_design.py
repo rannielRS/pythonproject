@@ -48,7 +48,7 @@ class FormularioOtrosPagosDesign():
 
             #Boton para Eliminar pago        
             self.btn_agPago = tk.Button(panel_principal, text="Eliminar pago", font=(
-                'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.registrarOP)
+                'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.eliminarOP)
             self.btn_agPago.place(x=870, y=290)   
             
             
@@ -155,7 +155,6 @@ class FormularioOtrosPagosDesign():
 
     #Definiendo tree view de periodo
     def registrarOP(self):       
-        
         if self.empSelec:
             idTPSelected = self.cb_tp_op.get().split('-')[0]
             idPeriodo = self.cb_periodo_op.get().split('-')[0]
@@ -165,13 +164,37 @@ class FormularioOtrosPagosDesign():
                     VALUES("+str(idTPSelected)+","+self.tx_monto_op.get()+","+str(idPeriodo)+","+str(selectedItem['values'][0])+")"
                 self.cursorLoc.execute(queryIOP)
                 self.connLoc.commit()            
-                self.treeEOP.set(self.empSelec, column='opagos', value=self.cb_tp_op.get())  
+                #self.treeEOP.set(self.empSelec, column='opagos', value=self.cb_tp_op.get())  
                 messagebox.showinfo('Confirmación','La información del pago se registró satisfactoriamente') 
             else:
                 messagebox.showinfo('Campos vacíos','Existen campos vacíos, debe completarlos')
         else:            
             messagebox.showinfo('Información','Debe seleccionar un trabajador')
         self.actualizartreeEOP()
+
+    def eliminarOP(self):
+        if self.empSelec:
+            idTPSelected = self.cb_tp_op.get().split('-')[0]
+            idPeriodo = self.cb_periodo_op.get().split('-')[0]
+            selectedItem=self.treeEOP.item(self.empSelec)
+            cantOPEmpbefore = len(self.listOP(selectedItem['values'][0]))
+            if self.tx_monto_op.get() != '' and  idPeriodo!= '' and  idTPSelected != '':                
+                queryEOP = "DELETE FROM postgres.public.opago WHERE tpago_id = "+str(idTPSelected)+"\
+                        AND monto = "+self.tx_monto_op.get()+" AND opago_periodo_id = "+str(idPeriodo)+" AND opago_empleado_id = "+str(selectedItem['values'][0])
+                self.cursorLoc.execute(queryEOP)
+                self.connLoc.commit() 
+                cantP = len(self.listOP(selectedItem['values'][0]))
+                if cantOPEmpbefore == cantP:
+                    messagebox.showinfo('Sin acción','No existen registros para la información suministrada')
+                    #self.treeEOP.set(self.empSelec, column='opagos', value=self.cb_tp_op.get())  
+                else:
+                    messagebox.showinfo('Confirmación','La información se eliminó correctamente') 
+            else:
+                messagebox.showinfo('Campos vacíos','Existen campos vacíos, debe completarlos')
+        else:            
+            messagebox.showinfo('Información','Debe seleccionar un trabajador')
+        self.actualizartreeEOP()
+
 
         
     def actualizartreeEOP(self):
@@ -202,7 +225,7 @@ class FormularioOtrosPagosDesign():
         self.actualizartreeEOP()
 
     def selectEmp(self,event):
-        self.empSelec = self.treeEOP.focus()
+        self.empSelec = self.treeEOP.selection()
         selectItem=self.treeEOP.item(self.empSelec)
         cadena=str(selectItem['values'][0])+" "+str(selectItem['values'][1])
         if len(cadena) < 26:

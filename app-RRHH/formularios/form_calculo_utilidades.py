@@ -28,6 +28,7 @@ class FormularioCalcUtilidadesDesign():
             self.registro_salario = False
             self.registro_vacaciones = False
             # Definiendo controles de seleccion
+            self.empSelec = ''
             self.tx_empleado = ttk.Entry(panel_principal, font=('Times', 14), width=10)
             self.tx_empleado.grid(row=0,column=0,padx=5,pady=5,ipadx=40)
 
@@ -75,17 +76,38 @@ class FormularioCalcUtilidadesDesign():
             #Boton para registrar vacaciones        
             self.btn_agVaca = tk.Button(panel_principal, text="Registrar vacaciones", font=(
                 'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.regVac)
-            self.btn_agVaca.place(x=750, y=160)
+            self.btn_agVaca.place(x=750, y=160)            
 
-            style = ttk.Style()   
-            
+            style = ttk.Style()            
             style.configure('TLabelframe', background=COLOR_CUERPO_PRINCIPAL, borderwidth=2, bodercolor='black')
             style.configure('TLabelframe.Label', background=COLOR_CUERPO_PRINCIPAL)
 
             #Label frame para las invalidadnte
-            lb_frame = ttk.Labelframe(panel_principal, text='Invalidantes del pago', width=255,height=185, style='TLabelframe')
-            lb_frame.place(x=735, y=200)
+            self.lb_frame = ttk.Labelframe(panel_principal, text='Invalidantes del pago', width=255,height=185, style='TLabelframe')
+            self.lb_frame.place(x=735, y=200)
 
+            #Empleado seleccionado
+            self.lb_sempleado_cu = tk.Label(self.lb_frame, text='Empleado seleccionado', justify='center', bg=COLOR_CUERPO_PRINCIPAL, font=('Times', 11))
+            #self.lb_sempleado_cu.pack(fill=tk.X, expand=True, side=tk.TOP) 
+            self.lb_sempleado_cu.grid(row=0,column=0,columnspan=2)
+
+            #Descripción invalidantes
+            self.textoComentInv=tk.Text(self.lb_frame, width=30, height=6, font=('Times', 11))
+            #self.textoComentInv.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
+            self.textoComentInv.grid(row=1,column=0,columnspan=2)
+            self.scrollVert=ttk.Scrollbar(self.lb_frame, command=self.textoComentInv.yview)
+            #self.scrollVert.pack(fill=tk.Y, side=tk.RIGHT) 
+            self.scrollVert.grid(row=1,column=3, sticky = tk.NS)
+
+            #Boton add inv        
+            self.btn_addinv = tk.Button(self.lb_frame, text="Add", font=(
+                'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.showResumen)
+            self.btn_addinv.grid(row=2,column=0)
+
+            #Boton elim inv        
+            self.btn_elimInv = tk.Button(self.lb_frame, text="Del", font=(
+                'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.showResumen)
+            self.btn_elimInv.grid(row=2,column=1)      
 
             #Boton mostrar resumen        
             self.btn_showResume = tk.Button(panel_principal, text="Calcular resumen", font=(
@@ -116,6 +138,7 @@ class FormularioCalcUtilidadesDesign():
             self.treeEUtil.heading(column='coef', text='C. Eva')
             self.treeEUtil.heading(column='devengado', text='S. Dev')
             self.treeEUtil.grid(row=1,column=0, columnspan=5,ipadx=5,padx=5,pady=5)
+            self.treeEUtil.bind('<<TreeviewSelect>>',self.selectEmp)
             self.actualizartreeEUtil() 
             self.cargarDpto() 
             
@@ -251,6 +274,15 @@ class FormularioCalcUtilidadesDesign():
                     self.connLoc.commit()
         self.registro_vacaciones = True
         messagebox.showinfo('Confirmación','La información de las vacaciones se registró satisfactoriamente')
+
+    def selectEmp(self,event):
+        self.empSelec = self.treeEUtil.selection()
+        selectItem=self.treeEUtil.item(self.empSelec)
+        cadena=str(selectItem['values'][0])+" "+str(selectItem['values'][1])
+        if len(cadena) < 26:
+            self.lb_sempleado_cu['text']=cadena
+        else:
+            self.lb_sempleado_cu['text']=cadena[0:25]+"..."
 
     def distribuirUtil(self):
         if self.tx_distribuir.get() != '':
@@ -533,6 +565,7 @@ class FormularioCalcUtilidadesDesign():
         
         self.cb_departamento['values']=options
 
+    
     def getPeriodo(self):         
         queryP='SELECT p.* FROM postgres.public.utilidades_periodo_incluye x INNER JOIN postgres.public.periodo AS p ON x.upincluye_periodo_id = p.id order by p.id asc'
         self.cursorLoc.execute(queryP)
