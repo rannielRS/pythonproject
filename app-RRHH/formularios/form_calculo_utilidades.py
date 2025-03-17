@@ -3,6 +3,8 @@ from tkinter import *
 from decimal import *
 from tkinter import ttk, messagebox
 from config import COLOR_CUERPO_PRINCIPAL, COLOR_BARRA_SUPERIOR, CONN_ZUN,CURSOR_ZUN,CONN_LOC,CURSOR_LOC
+from PIL import Image, ImageTk
+import util.util_imagenes as util_img
 import openpyxl
 from openpyxl.styles import Font, colors, fills, Alignment, PatternFill, NamedStyle
 import subprocess
@@ -29,6 +31,7 @@ class FormularioCalcUtilidadesDesign():
             self.registro_vacaciones = False
             # Definiendo controles de seleccion
             self.empSelec = ''
+            self.inv=[]
             self.tx_empleado = ttk.Entry(panel_principal, font=('Times', 14), width=10)
             self.tx_empleado.grid(row=0,column=0,padx=5,pady=5,ipadx=40)
 
@@ -83,30 +86,51 @@ class FormularioCalcUtilidadesDesign():
             style.configure('TLabelframe.Label', background=COLOR_CUERPO_PRINCIPAL)
 
             #Label frame para las invalidadnte
-            self.lb_frame = ttk.Labelframe(panel_principal, text='Invalidantes del pago', width=255,height=185, style='TLabelframe')
-            self.lb_frame.place(x=735, y=200)
+            self.lb_frame = ttk.Labelframe(panel_principal, text='Invalidantes del pago', style='TLabelframe')
+            self.lb_frame.place(x=735, y=200, width=255,height=185,)
 
             #Empleado seleccionado
             self.lb_sempleado_cu = tk.Label(self.lb_frame, text='Empleado seleccionado', justify='center', bg=COLOR_CUERPO_PRINCIPAL, font=('Times', 11))
-            #self.lb_sempleado_cu.pack(fill=tk.X, expand=True, side=tk.TOP) 
-            self.lb_sempleado_cu.grid(row=0,column=0,columnspan=2)
+            self.lb_sempleado_cu.grid(row=0,column=0,columnspan=4)
+            self.lb_sempleado_cu.grid_propagate(False)
 
             #Descripción invalidantes
             self.textoComentInv=tk.Text(self.lb_frame, width=30, height=6, font=('Times', 11))
             #self.textoComentInv.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
-            self.textoComentInv.grid(row=1,column=0,columnspan=2)
+            self.textoComentInv.grid(row=1,column=0,columnspan=3)
             self.scrollVert=ttk.Scrollbar(self.lb_frame, command=self.textoComentInv.yview)
             #self.scrollVert.pack(fill=tk.Y, side=tk.RIGHT) 
             self.scrollVert.grid(row=1,column=3, sticky = tk.NS)
 
+            #Definir imagenes de botones
+            imagen_pil_btadd = Image.open("./imagenes/add.png")
+            imagen_pil_btadd = imagen_pil_btadd.resize((20,20))
+            imagen_btadd_tk = ImageTk.PhotoImage(imagen_pil_btadd)
+
+            imagen_pil_btdel = Image.open("./imagenes/delete.png")
+            imagen_pil_btdel = imagen_pil_btdel.resize((20,20))
+            imagen_btdel_tk = ImageTk.PhotoImage(imagen_pil_btdel)
+
+            imagen_pil_btlist = Image.open("./imagenes/list.png")
+            imagen_pil_btlist = imagen_pil_btlist.resize((20,20))
+            imagen_btlist_tk = ImageTk.PhotoImage(imagen_pil_btlist)
+
             #Boton add inv        
-            self.btn_addinv = tk.Button(self.lb_frame, text="Add", font=(
-                'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.showResumen)
+            self.btn_listinv = tk.Button(self.lb_frame, text="\uf0c9",bd=0, image=imagen_btlist_tk, font=(
+                'Times', 13), command=self.listInv)
+            self.btn_listinv.image=imagen_btlist_tk
+            self.btn_listinv.grid(row=2,column=2)
+
+            #Boton add inv        
+            self.btn_addinv = tk.Button(self.lb_frame, text="\uf0c9",bd=0, image=imagen_btadd_tk, font=(
+                'Times', 13), command=self.addInv)
+            self.btn_addinv.image=imagen_btadd_tk
             self.btn_addinv.grid(row=2,column=0)
 
             #Boton elim inv        
-            self.btn_elimInv = tk.Button(self.lb_frame, text="Del", font=(
-                'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.showResumen)
+            self.btn_elimInv = tk.Button(self.lb_frame, text="\uf0c9",bd=0, image=imagen_btdel_tk, font=(
+                'Times', 13),  command=self.deleteInv)
+            self.btn_elimInv.image=imagen_btdel_tk
             self.btn_elimInv.grid(row=2,column=1)      
 
             #Boton mostrar resumen        
@@ -158,6 +182,57 @@ class FormularioCalcUtilidadesDesign():
         #print(tdestajo)
         return tdestajo
 
+
+    def deleteInv(self):
+        if self.empSelec:            
+            cadena = self.lb_sempleado_cu['text']
+            pesp = cadena.index(' ')
+            idemp=cadena[0:pesp]
+            if self.inv != []:
+                for einv in self.inv:
+                    finded = False
+                    if einv[0]==idemp:
+                        self.inv.remove(einv)
+                        finded = True
+                        messagebox.showinfo('Confirmación','Se eliminó el trabajador invalidado correctamente')
+                        self.treeEUtil.selection_remove(self.treeEUtil.selection())
+                        self.lb_sempleado_cu['text']='Empleado seleccionado'
+                        self.textoComentInv.delete(1.0, END)
+                if finded != True:
+                    messagebox.showinfo('Sin acción','No existe ese trabajador en el registro')
+            else:
+                messagebox.showinfo('Error de validación','No existen elementos para eliminar')
+        else:
+            messagebox.showinfo('Información','Debe seleccionar el trabajador')
+        
+
+
+    def addInv(self):
+        if self.empSelec:            
+            cadena = self.lb_sempleado_cu['text']
+            pesp = cadena.index(' ')
+            idemp=cadena[0:pesp]
+            textarea = self.textoComentInv.get("1.0", tk.END)
+            if textarea != '\n':
+                finded = False
+                for einv in self.inv:
+                    if einv[0] == idemp:
+                        finded = True
+                if finded:
+                    return messagebox.showwarning('Registro repetido','Ese especialista ya se encentra invalidado')
+                else:                    
+                    self.inv.append((idemp,textarea))
+                    messagebox.showinfo('Confirmación','Se registró el trabajador invalidado correctamente')
+                    self.treeEUtil.selection_remove(self.treeEUtil.selection())
+                    self.lb_sempleado_cu['text']='Empleado seleccionado'
+                    self.textoComentInv.delete(1.0, END)
+            else:
+                messagebox.showerror('Error de validación','Debe teclear una descripción')
+        else:
+            messagebox.showinfo('Información','Debe seleccionar el trabajador')
+
+    def listInv(self):
+        pass
     #Definiendo registro de salario
     def regSal(self):                
         queryEmpL=''
@@ -599,8 +674,7 @@ class FormularioCalcUtilidadesDesign():
         self.cursorLoc.execute(queryP)
         return self.cursorLoc.fetchone()[0]
 
-    def showResumen(self):  
-        self.limpiarResumenCalcLoc()       
+    def showResumen(self):                 
         queryP="SELECT emp.id,emp.nombreap,emp.ci,a.area  FROM postgres.public.empleado emp INNER JOIN postgres.public.area AS a ON emp.empleado_area_id  = a.id ORDER BY a.id"
         self.cursorLoc.execute(queryP)
         sumasaldevt = 0
@@ -609,6 +683,7 @@ class FormularioCalcUtilidadesDesign():
         utilidades_distrib = self.tx_distribuir.get()
         if utilidades_distrib == '':
             return messagebox.showinfo('Campo requerido','Debe indicar el monto a distribuir')
+        self.limpiarResumenCalcLoc()
         sumasalcalc = 0
         coeficiente_distribuir = 0
         for emp in empList:

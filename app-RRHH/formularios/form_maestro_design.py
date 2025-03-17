@@ -11,6 +11,7 @@ from formularios.form_evaluacion_design import FormularioEvaluacionDesign
 from formularios.form_cargaremp_design import FormularioCargarEDesign
 from formularios.form_calculo_utilidades import FormularioCalcUtilidadesDesign
 from formularios.form_op_design import FormularioOtrosPagosDesign
+from formularios.form_calcimp_design import FormularioCalcImpDesign
 
 class FormularioMaestroDesign(tk.Tk):
 
@@ -92,14 +93,16 @@ class FormularioMaestroDesign(tk.Tk):
         self.buttonET = tk.Button(self.menu_lateral)
         self.buttonDU = tk.Button(self.menu_lateral)        
         self.buttonOP = tk.Button(self.menu_lateral)
+        self.buttonCI = tk.Button(self.menu_lateral)
        
 
         buttons_info = [
             ("Registrar período", "\uf109", self.buttonRP,self.abrir_registrar_p),
             ("Importar empleados", "\uf007", self.buttonIE,self.abrir_cargarEmp),
-            ("Evaluar trabajador", "\uf03e", self.buttonET,self.abrir_evaluacion),
+            ("Evaluar trabajador", "\uf03e", self.buttonET,self.abrir_evaluacion),            
+            ("Otros pagos", "\uf013", self.buttonOP,self.abrir_otros_pagos),
             ("Distribuir utilidades", "\uf129", self.buttonDU,self.abrir_calc_util),
-            ("Otros pagos", "\uf013", self.buttonOP,self.abrir_otros_pagos)
+            ("Impuestos utilidades", "\uf129", self.buttonCI,self.abrir_calc_imp)
         ]
 
         for text, icon, button,comando in buttons_info:
@@ -157,6 +160,10 @@ class FormularioMaestroDesign(tk.Tk):
     def abrir_otros_pagos(self):  
         self.limpiar_panel(self.cuerpo_principal)          
         FormularioOtrosPagosDesign(self.cuerpo_principal) 
+
+    def abrir_calc_imp(self):  
+        self.limpiar_panel(self.cuerpo_principal)          
+        FormularioCalcImpDesign(self.cuerpo_principal) 
 
     def limpiar_panel(self,panel):
     # Función para limpiar el contenido del panel
