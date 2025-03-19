@@ -207,7 +207,7 @@ class FormularioCargarEDesign():
         else:
             queryEmpL='SELECT x.id,x.nombreap,x.ci,x.escalas,x.thoraria,x.destajo,a.area FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id ORDER BY a.id ASC'
                
-        print(queryEmpL)
+        #print(queryEmpL)
         self.cursorLoc.execute(queryEmpL)
 
         slistEmp = self.cursorLoc.fetchall()       

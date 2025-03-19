@@ -9,7 +9,6 @@ import openpyxl
 from openpyxl.styles import Font, colors, fills, Alignment, PatternFill, NamedStyle
 import subprocess
 import os
-import math
 
 
 
@@ -29,6 +28,7 @@ class FormularioCalcUtilidadesDesign():
             #variablesde estado
             self.registro_salario = False
             self.registro_vacaciones = False
+            self.calculo_utili = False
             # Definiendo controles de seleccion
             self.empSelec = ''
             self.inv=[]
@@ -360,7 +360,7 @@ class FormularioCalcUtilidadesDesign():
             self.lb_sempleado_cu['text']=cadena[0:25]+"..."
 
     def distribuirUtil(self):
-        if self.tx_distribuir.get() != '':
+        if self.calculo_utili == True:
             path = "file/utilidades_dist.xlsx"
             row = 6 
             controw = 1
@@ -561,7 +561,7 @@ class FormularioCalcUtilidadesDesign():
 
             for i in range(6,row):
                 sheet['T'+str(i)] = sheet['M3'].value
-                sheet['U'+str(i)] = f'=rounddown((S{i}*T{i}),2)'
+                sheet['U'+str(i)] = self.getDevengadoCalc("'"+sheet['C'+str(i)].value+"'")#f'=rounddown((S{i}*T{i}),2)'
 
             
             wb.save(path)
@@ -574,7 +574,7 @@ class FormularioCalcUtilidadesDesign():
 
             self.convert_xlsx_to_pdf(path,"utilidades_dist")
         else:
-            messagebox.showwarning('Campo vacío','Debe indicar el monto a distribuir')
+            messagebox.showwarning('Alerta','Debe realizar el cálculo resumen de las utilidades')
         
     def convert_xlsx_to_pdf(self,xlsx_file,nombreA=''):
         try:
@@ -640,7 +640,12 @@ class FormularioCalcUtilidadesDesign():
         
         self.cb_departamento['values']=options
 
-    
+    def getDevengadoCalc(self, emp):
+        query = "SELECT x.devengado FROM postgres.public.resumen_calculo_utilidades x where x.resumen_empleado_id ="+emp
+        self.cursorLoc.execute(query)
+        return self.cursorLoc.fetchone()[0]
+
+
     def getPeriodo(self):         
         queryP='SELECT p.* FROM postgres.public.utilidades_periodo_incluye x INNER JOIN postgres.public.periodo AS p ON x.upincluye_periodo_id = p.id order by p.id asc'
         self.cursorLoc.execute(queryP)
@@ -704,7 +709,7 @@ class FormularioCalcUtilidadesDesign():
                 coeficienteEva = 0
             else:
                 coeficienteEva = promEva
-            salcalc = round((((Decimal(mtsalario) + Decimal(mtvacaciones))/3)*Decimal(coeficienteEva)),2)
+            salcalc = ((Decimal(mtsalario) + Decimal(mtvacaciones))/3)*Decimal(coeficienteEva)
             registro_salcalc.append((emp[0],salcalc,mtsalario,mtvacaciones,horast))
 
         for empsalp in registro_salcalc:
@@ -712,26 +717,29 @@ class FormularioCalcUtilidadesDesign():
 
         coeficiente_distribuir = Decimal(utilidades_distrib)/Decimal(sumasalcalc)
 
+        queryUpdateUD = "UPDATE postgres.public.utilidades_distribucion set monto_distribuir ="+str(self.tx_distribuir.get())+" WHERE id ="+str(self.getUtiliDist()[0])
+        self.cursorLoc.execute(queryUpdateUD)
+        self.connLoc.commit()
         for listE in registro_salcalc:
-            saldevT = listE[1] * coeficiente_distribuir
+            saldevT = self.truncar_2_decimales((listE[1] * coeficiente_distribuir))
             sumasaldevt += saldevT
             queryInsertRe = "INSERT INTO postgres.public.resumen_calculo_utilidades\
                 (resumen_empleado_id,resumen_utilidadesd_id,mtvacaciones,mtsalario,horastt,coeficienteeva_utilidades,descrip_coeficiente,devengado)\
-                    VALUES ('"+str(listE[0])+"',"+str(self.getUtiliDist()[0])+","+str(round(listE[3],2))+","+str(round(listE[2],2))+","+str(round(listE[4],2))+","+str(self.calcCoeficienteEva(listE[0]))+",'',"+str(round(saldevT,2))+")"
+                    VALUES ('"+str(listE[0])+"',"+str(self.getUtiliDist()[0])+","+str(round(listE[3],2))+","+str(round(listE[2],2))+","+str(round(listE[4],2))+","+str(self.calcCoeficienteEva(listE[0]))+",'',"+str(saldevT)+")"
             
             self.cursorLoc.execute(queryInsertRe)
             self.connLoc.commit()
-        print(coeficiente_distribuir)
-        print(sumasalcalc)
-        print(sumasaldevt)
-
-        diferencia = Decimal(utilidades_distrib)-round(sumasaldevt,2)
-        self.tx_diferencia['text'] = 'Diferencia: '+str(diferencia)
+        self.calculo_utili = True
+        diferencia = Decimal(utilidades_distrib)-Decimal(sumasaldevt)
+        
+        self.tx_diferencia['text'] = 'Diferencia: '+str(round(diferencia,2))
         self.actualizartreeEUtil()
 
 
-
-        
+    #Redondear por defecto
+    def truncar_2_decimales(self,numero):
+        factor = 100
+        return int(numero * factor) / factor    
 
     #Obtener informacion del Periodo de utilidades definido        
     def getUtiliDist(self):
