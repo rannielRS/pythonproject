@@ -115,7 +115,7 @@ class FormularioCalcUtilidadesDesign():
             imagen_pil_btlist = imagen_pil_btlist.resize((20,20))
             imagen_btlist_tk = ImageTk.PhotoImage(imagen_pil_btlist)
 
-            #Boton add inv        
+            #Boton list inv        
             self.btn_listinv = tk.Button(self.lb_frame, text="\uf0c9",bd=0, image=imagen_btlist_tk, font=(
                 'Times', 13), command=self.listInv)
             self.btn_listinv.image=imagen_btlist_tk
@@ -232,7 +232,34 @@ class FormularioCalcUtilidadesDesign():
             messagebox.showinfo('Información','Debe seleccionar el trabajador')
 
     def listInv(self):
-        pass
+        path = "file/list_invalidados.xlsx"
+        row = 4 
+        controw = 1
+        self.limpiarExcel(row,path)   
+        wb = openpyxl.load_workbook(path)
+        sheet = wb.active  
+
+
+        queryP="SELECT a.area,emp.id,emp.ci,emp.nombreap,emp.escalas,emp.thoraria  FROM postgres.public.empleado emp INNER JOIN postgres.public.area AS a ON emp.empleado_area_id  = a.id ORDER BY a.id"
+        self.cursorLoc.execute(queryP)
+        listEmp = self.cursorLoc.fetchall()
+        for empleado in listEmp:
+            for t in self.inv:
+                if '"'+empleado[1]+'"' in t:
+                    sheet['A'+str(row)] = controw
+                    sheet['B'+str(row)]=empleado[1]
+                    sheet['C'+str(row)]=empleado[3]
+                    sheet['D'+str(row)]=empleado[2]
+                    sheet['E'+str(row)]=empleado[0]
+                    sheet['F'+str(row)] = self.inv.index(t[1])
+
+
+        wb.save(path)
+
+        self.convert_xlsx_to_pdf(path,"list_invalidados")
+        
+
+
     #Definiendo registro de salario
     def regSal(self):                
         queryEmpL=''

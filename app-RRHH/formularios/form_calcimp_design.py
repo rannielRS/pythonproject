@@ -3,6 +3,7 @@ from tkinter import *
 from tkinter import ttk, messagebox
 from decimal import *
 from config import COLOR_CUERPO_PRINCIPAL, COLOR_BARRA_SUPERIOR,CONN_LOC,CURSOR_LOC,CONN_ZUN,CURSOR_ZUN
+from PIL import Image, ImageTk
 import openpyxl
 import os
 import subprocess
@@ -21,13 +22,15 @@ class FormularioCalcImpDesign():
         self.cursorLoc = CURSOR_LOC
         self.connZun = CONN_ZUN
         self.cursorZun = CURSOR_ZUN
+
         if self.getPeriodo():
             
             # Definiendo controles de seleccion
             self.empSelec = ''
             self.tx_empleado_calceco = ttk.Entry(panel_principal, font=('Times', 14), width=10)
             self.tx_empleado_calceco.grid(row=0,column=0,padx=5,pady=5,ipadx=40)
-
+            self.db_rm = []
+            self.db_rm_str = StringVar()
             #Boton para buscar empleados        
             self.btn_bempleados_calceco = tk.Button(panel_principal, text="Buscar", font=(
                 'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.actualizartreeCALCECO)
@@ -43,21 +46,65 @@ class FormularioCalcImpDesign():
             #self.cb_periodo.current(0)
             self.cb_area_calceco.place(x=520, y=5)
 
+            style = ttk.Style()            
+            style.configure('TLabelframe', background=COLOR_CUERPO_PRINCIPAL, borderwidth=2, bodercolor='black')
+            style.configure('TLabelframe.Label', background=COLOR_CUERPO_PRINCIPAL)
+            
+            #Label frame para las invalidadnte
+            self.lb_frame_calceco = ttk.Labelframe(panel_principal, text='Descuento por RM', style='TLabelframe')
+            self.lb_frame_calceco.place(x=840, y=130, width=152,height=110)
+
+            #Empleado seleccionado
+            self.lb_sempleado_calceco = tk.Label(self.lb_frame_calceco, text='Empleado seleccionado', justify='center', bg=COLOR_CUERPO_PRINCIPAL, font=('Times', 11))
+            self.lb_sempleado_calceco.grid(row=0,column=0,columnspan=2)
+            self.lb_sempleado_calceco.grid_propagate(False)
+
+            #Descuento
+            self.textoComentInv_calceco=ttk.Entry(self.lb_frame_calceco, font=('Times', 11), width=15, textvariable=self.db_rm_str)
+            #self.textoComentInv_calceco.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
+            self.textoComentInv_calceco.grid(row=1,column=0,columnspan=2)
+            self.textoComentInv_calceco.grid_propagate(False)
+
+            #Definir imagenes de botones
+            imagen_pil_btadd = Image.open("./imagenes/add.png")
+            imagen_pil_btadd = imagen_pil_btadd.resize((20,20))
+            imagen_btadd_tk = ImageTk.PhotoImage(imagen_pil_btadd)
+
+            imagen_pil_btdel = Image.open("./imagenes/delete.png")
+            imagen_pil_btdel = imagen_pil_btdel.resize((20,20))
+            imagen_btdel_tk = ImageTk.PhotoImage(imagen_pil_btdel)
+
+            imagen_pil_btlist = Image.open("./imagenes/list.png")
+            imagen_pil_btlist = imagen_pil_btlist.resize((20,20))
+
+            
+            #Boton add inv        
+            self.btn_addinv_calceco = tk.Button(self.lb_frame_calceco, text="\uf0c9",bd=0, image=imagen_btadd_tk, font=(
+                'Times', 13), command=self.addInv)
+            self.btn_addinv_calceco.image=imagen_btadd_tk
+            self.btn_addinv_calceco.grid(row=2,column=0)
+
+            #Boton elim inv        
+            self.btn_elimInv_calceco = tk.Button(self.lb_frame_calceco, text="\uf0c9",bd=0, image=imagen_btdel_tk, font=(
+                'Times', 13),  command=self.deleteInv)
+            self.btn_elimInv_calceco.image=imagen_btdel_tk
+            self.btn_elimInv_calceco.grid(row=2,column=1) 
+
             #Boton Informe/utilidades        
             self.btn_infUtil = tk.Button(panel_principal, text="Informe/utilidades", font=(
                 'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.informeUtil)
-            self.btn_infUtil.place(x=835, y=150)     
+            self.btn_infUtil.place(x=835, y=250)     
 
             #Boton Informe. x Depart.       
             self.btn_infUtilDep = tk.Button(panel_principal, text="Informe. x Depart.", font=(
                 'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.informeDep)
-            self.btn_infUtilDep.place(x=835, y=200)             
+            self.btn_infUtilDep.place(x=835, y=300)             
 
 
             #Boton Exportar dbf        
             self.btn_expdbf = tk.Button(panel_principal, text="Exportar dbf", font=(
                 'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.expDBF)
-            self.btn_expdbf.place(x=835, y=250)
+            self.btn_expdbf.place(x=835, y=350)
             
 
             #Periodo del pago
@@ -101,6 +148,54 @@ class FormularioCalcImpDesign():
         else:
             messagebox.showinfo('Notificación','Debe registrar un período de evaluación')
 
+    def deleteInv(self):
+        if self.empSelec:            
+            cadena = self.lb_sempleado_calceco['text']
+            pesp = cadena.index(' ')
+            idemp=cadena[0:pesp]
+            if self.db_rm != []:
+                for ecrm in self.db_rm:
+                    finded = False
+                    if ecrm[0]==idemp:
+                        self.db_rm.remove(ecrm)
+                        finded = True
+                        messagebox.showinfo('Confirmación','Se eliminó el trabajador invalidado correctamente')
+                        self.treeECalcEco.selection_remove(self.treeECalcEco.selection())
+                        self.lb_sempleado_calceco['text']='Empleado seleccionado'
+                        self.db_rm_str.set('')
+                if finded != True:
+                    messagebox.showinfo('Sin acción','No existe ese trabajador en el registro')
+            else:
+                messagebox.showinfo('Error de validación','No existen elementos para eliminar')
+        else:
+            messagebox.showinfo('Información','Debe seleccionar el trabajador')
+        
+
+
+    def addInv(self):
+        if self.empSelec:            
+            cadena = self.lb_sempleado_calceco['text']
+            pesp = cadena.index(' ')
+            idemp=cadena[0:pesp]
+            valor = self.textoComentInv_calceco.get()
+            if valor != '\n':
+                finded = False
+                for ecrm in self.db_rm:
+                    if ecrm[0] == idemp:
+                        finded = True
+                if finded:
+                    return messagebox.showwarning('Registro repetido','Ese especialista ya se encentra invalidado')
+                else:                    
+                    self.db_rm.append((idemp,valor))
+                    messagebox.showinfo('Confirmación','Se registró el trabajador invalidado correctamente')
+                    self.treeECalcEco.selection_remove(self.treeECalcEco.selection())
+                    self.lb_sempleado_calceco['text']='Empleado seleccionado'
+            else:
+                messagebox.showerror('Error de validación','Debe teclear una descripción')
+        else:
+            messagebox.showinfo('Información','Debe seleccionar el trabajador')
+
+    
     def getDevengadoCalc(self, emp):
         query = "SELECT x.devengado FROM postgres.public.resumen_calculo_utilidades x where x.resumen_empleado_id ="+emp
         self.cursorLoc.execute(query)
@@ -247,78 +342,103 @@ class FormularioCalcImpDesign():
             sheet['AA'+str(row)].font +=  number_format
             sheet['AA'+str(row)].alignment += alignmentNumber
             sheet['AA'+str(row)].number_format = '#,##0.00'
+            sheet['AA'+str(row)]=f'=IF(X{row}<=15000,X{row}*AA$5,15000*AA$5)'
             sheet['AB'+str(row)].font +=  number_format
             sheet['AB'+str(row)].alignment += alignmentNumber
             sheet['AB'+str(row)].number_format = '#,##0.00'
+            sheet['AB'+str(row)]=f'=IF(X{row}<=15000,0,(X{row}-15000)*AB$5)'
             sheet['AC'+str(row)].font +=  number_format
             sheet['AC'+str(row)].alignment += alignmentNumber
             sheet['AC'+str(row)].number_format = '#,##0.00'
+            sheet['AC'+str(row)]=f'=SUM(AA{row}:AB{row})'
             sheet['AD'+str(row)].font +=  number_format
             sheet['AD'+str(row)].alignment += alignmentNumber
             sheet['AD'+str(row)].number_format = '#,##0.00'
+            sheet['AD'+str(row)]=f'=IF(Z{row}<=15000,Z{row}*AD$5,15000*AD$5)'
             sheet['AE'+str(row)].font +=  number_format
             sheet['AE'+str(row)].alignment += alignmentNumber
             sheet['AE'+str(row)].number_format = '#,##0.00'
+            sheet['AE'+str(row)]=f'=IF(Z{row}<=15000,0,(Z{row}-15000)*AE$5)'
             sheet['AF'+str(row)].font +=  number_format
             sheet['AF'+str(row)].alignment += alignmentNumber
             sheet['AF'+str(row)].number_format = '#,##0.00'
+            sheet['AF'+str(row)]=f'=SUM(AD{row}:AE{row})'
             sheet['AG'+str(row)].font +=  number_format
             sheet['AG'+str(row)].alignment += alignmentNumber
             sheet['AG'+str(row)].number_format = '#,##0.00'
+            sheet['AG'+str(row)]=f'=SUM(AF{row}-AC{row})'
             sheet['AH'+str(row)].font +=  number_format
             sheet['AH'+str(row)].alignment += alignmentNumber
             sheet['AH'+str(row)].number_format = '#,##0.00'
+            sheet['AH'+str(row)]=f'=IF(X{row}>3260,IF(X{row}>9510,(9510-3260)*AH$5,(X{row}-3260)*AH$5),0)'
             sheet['AI'+str(row)].font +=  number_format
             sheet['AI'+str(row)].alignment += alignmentNumber
             sheet['AI'+str(row)].number_format = '#,##0.00'
+            sheet['AI'+str(row)]=f'=IF(X{row}>9510,IF(X{row}>15000,(15000-9510)*AI$5,(X{row}-9510)*AI$5),0)'
             sheet['AJ'+str(row)].font +=  number_format
             sheet['AJ'+str(row)].alignment += alignmentNumber
             sheet['AJ'+str(row)].number_format = '#,##0.00'
+            sheet['AJ'+str(row)]=f'=IF(X{row}>15000,IF(X{row}>20000,(20000-15000)*AJ$5,(X{row}-15000)*AJ$5),0)'
             sheet['AK'+str(row)].font +=  number_format
             sheet['AK'+str(row)].alignment += alignmentNumber
             sheet['AK'+str(row)].number_format = '#,##0.00'
+            sheet['AK'+str(row)]=f'=IF(X{row}>20000,IF(X{row}>25000,(25000-20000)*AK$5,(X{row}-20000)*AK$5),0)'
             sheet['AL'+str(row)].font +=  number_format
             sheet['AL'+str(row)].alignment += alignmentNumber
             sheet['AL'+str(row)].number_format = '#,##0.00'
+            sheet['AL'+str(row)]=f'=IF(X{row}>25000,IF(X{row}>30000,(30000-25000)*AL$5,(X{row}-25000)*AL$5),0)'
             sheet['AM'+str(row)].font +=  number_format
             sheet['AM'+str(row)].alignment += alignmentNumber
             sheet['AM'+str(row)].number_format = '#,##0.00'
+            sheet['AM'+str(row)]=f'=IF(X{row}>30000,(X{row}-30000)*AM$5,0)'
             sheet['AN'+str(row)].font +=  number_format
             sheet['AN'+str(row)].alignment += alignmentNumber
             sheet['AN'+str(row)].number_format = '#,##0.00'
+            sheet['AN'+str(row)]=f'=SUM(AH{row}:AM{row})'
             sheet['AO'+str(row)].font +=  number_format
             sheet['AO'+str(row)].alignment += alignmentNumber
             sheet['AO'+str(row)].number_format = '#,##0.00'
+            sheet['AO'+str(row)]=f'=IF(Z{row}>3260,IF(Z{row}>9510,(9510-3260)*AO$5,(Z{row}-3260)*AO$5),0)'
+            sheet['AP'+str(row)].font +=  number_format
+            sheet['AP'+str(row)].alignment += alignmentNumber
+            sheet['AP'+str(row)].number_format = '#,##0.00'
+            sheet['AP'+str(row)]=f'=IF(Z{row}>9510,IF(Z{row}>15000,(15000-9510)*AP$5,(Z{row}-9510)*AP$5),0)'
             sheet['AQ'+str(row)].font +=  number_format
             sheet['AQ'+str(row)].alignment += alignmentNumber
             sheet['AQ'+str(row)].number_format = '#,##0.00'
+            sheet['AQ'+str(row)]=f'=IF(Z{row}>15000,IF(Z{row}>20000,(20000-15000)*AQ$5,(Z{row}-15000)*AQ$5),0)'
             sheet['AR'+str(row)].font +=  number_format
             sheet['AR'+str(row)].alignment += alignmentNumber
             sheet['AR'+str(row)].number_format = '#,##0.00'
+            sheet['AR'+str(row)]=f'=IF(Z{row}>20000,IF(Z{row}>25000,(25000-20000)*AR$5,(Z{row}-20000)*AR$5),0)'
             sheet['AS'+str(row)].font +=  number_format
             sheet['AS'+str(row)].alignment += alignmentNumber
             sheet['AS'+str(row)].number_format = '#,##0.00'
+            sheet['AS'+str(row)]=f'=IF(Z{row}>25000,IF(Z{row}>30000,(30000-25000)*AS$5,(Z{row}-25000)*AS$5),0)'
             sheet['AT'+str(row)].font +=  number_format
             sheet['AT'+str(row)].alignment += alignmentNumber
             sheet['AT'+str(row)].number_format = '#,##0.00'
+            sheet['AT'+str(row)]=f'=IF(Z{row}>30000,(Z{row}-30000)*AT$5,0)'
             sheet['AU'+str(row)].font +=  number_format
             sheet['AU'+str(row)].alignment += alignmentNumber
             sheet['AU'+str(row)].number_format = '#,##0.00'
+            sheet['AU'+str(row)]=f'=SUM(AO{row}:AT{row})'
             sheet['AV'+str(row)].font +=  number_format
             sheet['AV'+str(row)].alignment += alignmentNumber
             sheet['AV'+str(row)].number_format = '#,##0.00'
+            sheet['AV'+str(row)]=f'=AU{row}-AN{row}'
             sheet['AW'+str(row)].font +=  number_format
             sheet['AW'+str(row)].alignment += alignmentNumber
             sheet['AW'+str(row)].number_format = '#,##0.00'
             sheet['AX'+str(row)].font +=  number_format
             sheet['AX'+str(row)].alignment += alignmentNumber
             sheet['AX'+str(row)].number_format = '#,##0.00'
-            sheet['AY'+str(row)].font +=  number_format
-            sheet['AY'+str(row)].alignment += alignmentNumber
-            sheet['AY'+str(row)].number_format = '#,##0.00'
-            sheet['AZ'+str(row)].font +=  number_format
-            sheet['AZ'+str(row)].alignment += alignmentNumber
-            sheet['AZ'+str(row)].number_format = '#,##0.00'
+            sheet['AX'+str(row)]=f'=Y{row}-AG{row}-AV{row}-AW{row}'
+
+            if self.getPagosTM(empleado[1])['pago_tm_mn'] == 1:
+                sheet['AY'+str(row)] = 'TM'
+            else:
+                sheet['AY'+str(row)] = ''
 
             idsperiodos =  []
             periodos = list(self.getPeriodo())
@@ -420,9 +540,11 @@ class FormularioCalcImpDesign():
             if salarioMesp is not None:
                 sheet['X'+str(i)] = salarioMesp['deveng_salario']
             else:
-                sheet['X'+str(i)] = '0.00'
+                sheet['X'+str(i)] = 0
             sheet['Y'+str(i)] = f'=U{i}'  
             sheet['Z'+str(i)] = f'=X{i}+Y{i}'
+            
+        
 
         
         wb.save(path)
@@ -450,6 +572,18 @@ class FormularioCalcImpDesign():
         except Exception as e:
             print("Error:", e)
 
+    def selectEmp(self,event):
+        self.empSelec = self.treeECalcEco.selection()
+        selectItem=self.treeECalcEco.item(self.empSelec)
+        cadena=str(selectItem['values'][0])+" "+str(selectItem['values'][1])
+        self.lb_sempleado_calceco['text']=cadena.split(' ')[0]
+    
+    def getPagosTM(self,emp):
+        querysalnom = "SELECT ppt.pago_tm_mn, ppt.cuenta_tm_cup FROM ZUNpr.dbo.p_pagos_tm AS ppt WHERE ppt.no_interno="+str(emp)
+        self.cursorZun.execute(querysalnom)
+        result = self.cursorZun.fetchone()
+        return result
+
     def getSalarioNomMes(self,emp,mes):
         querysalnom = "SELECT ns.deveng_salario FROM ZUNpr.dbo.nomina_sal AS ns WHERE no_interno="+str(emp)+" AND id_periodo="+str(mes)
         self.cursorZun.execute(querysalnom)
@@ -457,27 +591,7 @@ class FormularioCalcImpDesign():
         return result
     
     def informeDep(self):
-        if self.empSelec:
-            idTPSelected = self.cb_tp_op.get().split('-')[0]
-            idPeriodo = self.cb_periodo_calceco.get().split('-')[0]
-            selectedItem=self.treeECalcEco.item(self.empSelec)
-            cantOPEmpbefore = len(self.listOP(selectedItem['values'][0]))
-            if self.tx_monto_op.get() != '' and  idPeriodo!= '' and  idTPSelected != '':                
-                queryEOP = "DELETE FROM postgres.public.opago WHERE tpago_id = "+str(idTPSelected)+"\
-                        AND monto = "+self.tx_monto_op.get()+" AND opago_periodo_id = "+str(idPeriodo)+" AND opago_empleado_id = "+str(selectedItem['values'][0])
-                self.cursorLoc.execute(queryEOP)
-                self.connLoc.commit() 
-                cantP = len(self.listOP(selectedItem['values'][0]))
-                if cantOPEmpbefore == cantP:
-                    messagebox.showinfo('Sin acción','No existen registros para la información suministrada')
-                    #self.treeECalcEco.set(self.empSelec, column='opagos', value=self.cb_tp_op.get())  
-                else:
-                    messagebox.showinfo('Confirmación','La información se eliminó correctamente') 
-            else:
-                messagebox.showinfo('Campos vacíos','Existen campos vacíos, debe completarlos')
-        else:            
-            messagebox.showinfo('Información','Debe seleccionar un trabajador')
-        self.actualizartreeCALCECO()
+        pass
 
     def getVacacionesMT(self, empleado):
         mtvacaciones = []

@@ -303,9 +303,11 @@ class FormularioOtrosPagosDesign():
         sheet['I3'].font += text_format
         
         
-        for parent in self.treeEOP.get_children():
-            values=self.treeEOP.item(parent)["values"]
-            countmerge = len(self.listOP(values[0]))
+        queryP="SELECT a.area,emp.id,emp.ci,emp.nombreap,emp.escalas,emp.thoraria,emp.destajo  FROM postgres.public.empleado emp INNER JOIN postgres.public.area AS a ON emp.empleado_area_id  = a.id ORDER BY a.id"
+        self.cursorLoc.execute(queryP)
+        listEmp = self.cursorLoc.fetchall()
+        for empleado in listEmp:
+            countmerge = len(self.listOP("'"+empleado[1]+"'"))
             sheet["A"+str(row)].alignment = Alignment(vertical='top')
             sheet["B"+str(row)].alignment = Alignment(vertical='top')
             sheet["C"+str(row)].alignment = Alignment(vertical='top')
@@ -313,7 +315,7 @@ class FormularioOtrosPagosDesign():
             sheet["E"+str(row)].alignment = Alignment(vertical='top')         
             
             
-            if len(self.listOP(values[0])) > 0:
+            if len(self.listOP("'"+empleado[1]+"'")) > 0:
                 
                 if countmerge > 1:
                     sheet.merge_cells("A"+str(row)+":A"+str(row+countmerge-1))                     
@@ -323,28 +325,28 @@ class FormularioOtrosPagosDesign():
                     sheet.merge_cells("E"+str(row)+":E"+str(row+countmerge-1))                    
 
                 sheet['A'+str(row)]=consec
-                sheet['B'+str(row)]=values[0]
-                sheet['C'+str(row)]=values[1]
-                sheet['D'+str(row)]=values[2]
-                sheet['E'+str(row)]=values[3]
-                if self.listOP(values[0],self.getPeriodo()[0][0]) is not None:
-                    listop = self.listOP(values[0],self.getPeriodo()[0][0])
+                sheet['B'+str(row)]=empleado[1]
+                sheet['C'+str(row)]=empleado[3]
+                sheet['D'+str(row)]=empleado[2]
+                sheet['E'+str(row)]=empleado[0]
+                if self.listOP("'"+empleado[1]+"'",self.getPeriodo()[0][0]) is not None:
+                    listop = self.listOP("'"+empleado[1]+"'",self.getPeriodo()[0][0])
                     for p in listop:
                         sheet['F'+str(row)]=p[5]   
                         sheet["F"+str(row)].alignment = Alignment(vertical='top', wrapText=True)                    
                         sheet['G'+str(row)]=p[4]
                         sheet["G"+str(row)].alignment = Alignment(vertical='top', horizontal = 'center')
                         row+=1
-                if self.listOP(values[0],self.getPeriodo()[1][0]) is not None:
-                    listop = self.listOP(values[0],self.getPeriodo()[1][0])
+                if self.listOP("'"+empleado[1]+"'",self.getPeriodo()[1][0]) is not None:
+                    listop = self.listOP("'"+empleado[1]+"'",self.getPeriodo()[1][0])
                     for p in listop:
                         sheet['F'+str(row)]=p[5] 
                         sheet["F"+str(row)].alignment = Alignment(vertical='top', wrapText=True)                       
                         sheet['H'+str(row)]=p[4]
                         sheet["H"+str(row)].alignment = Alignment(vertical='top', horizontal = 'center')
                         row+=1
-                if self.listOP(values[0],self.getPeriodo()[2][0]) is not None:
-                    listop = self.listOP(values[0],self.getPeriodo()[2][0])
+                if self.listOP("'"+empleado[1]+"'",self.getPeriodo()[2][0]) is not None:
+                    listop = self.listOP("'"+empleado[1]+"'",self.getPeriodo()[2][0])
                     for p in listop:
                         sheet['F'+str(row)]=p[5]
                         sheet["F"+str(row)].alignment = Alignment(vertical='top', wrapText=True)

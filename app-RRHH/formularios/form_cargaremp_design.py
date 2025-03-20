@@ -267,19 +267,20 @@ class FormularioCargarEDesign():
         size = '0',
         color = colors.BLACK) 
         row = 5
-        for parent in self.treeE.get_children():
+        queryP="SELECT a.area,emp.id,emp.ci,emp.nombreap,emp.escalas,emp.thoraria,emp.destajo  FROM postgres.public.empleado emp INNER JOIN postgres.public.area AS a ON emp.empleado_area_id  = a.id ORDER BY a.id"
+        self.cursorLoc.execute(queryP)
+        listEmp = self.cursorLoc.fetchall()
+        for empleado in listEmp:
             #Insertar empleados
-            tag=self.treeE.item(parent)["tags"]
-            values=self.treeE.item(parent)["values"]
-            sheet['A'+str(row)]=self.getDepartamento(values[0])
-            sheet['B'+str(row)]=values[0]
-            sheet['C'+str(row)]=values[1]
-            sheet['D'+str(row)]=values[2]
+            sheet['A'+str(row)]=empleado[0]
+            sheet['B'+str(row)]=empleado[1]
+            sheet['C'+str(row)]=empleado[3]
             sheet['D'+str(row)].font +=  text_format
             sheet['D'+str(row)].alignment += alignmentText
-            sheet['E'+str(row)]=values[3]
-            sheet['F'+str(row)]=values[4]
-            if tag[0] == 'checked':
+            sheet['D'+str(row)]=empleado[2]            
+            sheet['E'+str(row)]=empleado[4]
+            sheet['F'+str(row)]=empleado[5]
+            if empleado[6] == 1:
                 sheet['G'+str(row)]='Si'
             else:
                 sheet['G'+str(row)]='No'
