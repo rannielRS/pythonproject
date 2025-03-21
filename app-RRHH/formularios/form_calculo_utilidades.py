@@ -140,8 +140,9 @@ class FormularioCalcUtilidadesDesign():
             
 
             #Treeview        
-            columns = ('numero', 'nombreap', 'ci', 'salario','vacaciones','horast','coef','devengado')
+            columns = ('numero', 'nombreap', 'ci', 'salario','vacaciones','horast','coef','devengado','descrinv')
             self.treeEUtil = ttk.Treeview(panel_principal, height=16, columns=columns, show='headings')
+            self.treeEUtil["displaycolumns"]=('numero', 'nombreap', 'ci', 'salario','vacaciones','horast','coef','devengado')
             self.style = ttk.Style(self.treeEUtil)
             self.style.configure('Treeview',rowheight=30)
             self.treeEUtil.column('numero',width=80)
@@ -219,12 +220,13 @@ class FormularioCalcUtilidadesDesign():
                     if einv[0] == idemp:
                         finded = True
                 if finded:
-                    return messagebox.showwarning('Registro repetido','Ese especialista ya se encentra invalidado')
+                    return messagebox.showwarning(f'Registro repetido','El especialista ya se encentra invalidado')
                 else:                    
                     self.inv.append((idemp,textarea))
                     messagebox.showinfo('Confirmación','Se registró el trabajador invalidado correctamente')
-                    self.treeEUtil.selection_remove(self.treeEUtil.selection())
-                    self.lb_sempleado_cu['text']='Empleado seleccionado'
+
+                    self.treeEUtil.selection_remove(self.treeEUtil.selection())                    
+                    self.lb_sempleado_cu['text']='Empleado seleccionado'                    
                     self.textoComentInv.delete(1.0, END)
             else:
                 messagebox.showerror('Error de validación','Debe teclear una descripción')
@@ -238,22 +240,27 @@ class FormularioCalcUtilidadesDesign():
         self.limpiarExcel(row,path)   
         wb = openpyxl.load_workbook(path)
         sheet = wb.active  
-
-
         queryP="SELECT a.area,emp.id,emp.ci,emp.nombreap,emp.escalas,emp.thoraria  FROM postgres.public.empleado emp INNER JOIN postgres.public.area AS a ON emp.empleado_area_id  = a.id ORDER BY a.id"
         self.cursorLoc.execute(queryP)
         listEmp = self.cursorLoc.fetchall()
         for empleado in listEmp:
             for t in self.inv:
-                if '"'+empleado[1]+'"' in t:
+                idemp= "'"+empleado[1]+"'"
+                if idemp in t:
                     sheet['A'+str(row)] = controw
                     sheet['B'+str(row)]=empleado[1]
+                    sheet['B'+str(row)].alignment = Alignment(vertical='top', horizontal = 'left')
                     sheet['C'+str(row)]=empleado[3]
+                    sheet['C'+str(row)].alignment = Alignment(vertical='top', horizontal = 'left')
                     sheet['D'+str(row)]=empleado[2]
-                    sheet['E'+str(row)]=empleado[0]
-                    sheet['F'+str(row)] = self.inv.index(t[1])
-
-
+                    sheet['D'+str(row)].alignment = Alignment(vertical='top', horizontal = 'left')
+                    sheet['E'+str(row)]=empleado[0]   
+                    sheet['E'+str(row)].alignment = Alignment(vertical='top', horizontal = 'left')                 
+                    cadena = t[1]
+                    sheet['F'+str(row)] = cadena.strip()
+                    sheet['F'+str(row)].alignment = Alignment(vertical='top', wrapText=True)
+                    controw +=1
+                    row+=1
         wb.save(path)
 
         self.convert_xlsx_to_pdf(path,"list_invalidados")

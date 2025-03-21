@@ -178,7 +178,7 @@ class FormularioCalcImpDesign():
             pesp = cadena.index(' ')
             idemp=cadena[0:pesp]
             valor = self.textoComentInv_calceco.get()
-            if valor != '\n':
+            if valor != '':
                 finded = False
                 for ecrm in self.db_rm:
                     if ecrm[0] == idemp:
@@ -216,7 +216,167 @@ class FormularioCalcImpDesign():
 
         self.cb_periodo_calceco['value']=options
 
-    #Definiendo tree view de periodo
+    #Obtener resumen de registro de utilidades de un empleado
+    def getResumenUtilEco(self,emp,utildev,salmespago):
+        devengadot = utildev + salmespago
+        #Seguridad social del salario del mes pago
+        sal_mespago_5pcSC = 0
+        sal_mespago_10pcSC = 0
+        seg_social_mesSalario = 0
+        # -5%
+        if salmespago <= 15000:
+            sal_mespago_5pcSC = salmespago * (5/100)
+        else:
+            sal_mespago_5pcSC = 15000 * (5/100)
+        # -10%
+        if salmespago <= 15000:
+            sal_mespago_10pcSC = 0
+        else:
+            sal_mespago_10pcSC = (salmespago-15000) * (10/100)
+        seg_social_mesSalario = sal_mespago_5pcSC + sal_mespago_10pcSC
+        # Seguridad social total
+        sst_5pc = 0
+        sst_10pc = 0
+        sst = 0
+        sst_diferencia = 0
+        # -5%
+        if devengadot <= 15000:
+            sst_5pc = devengadot * (5/100)
+        else:
+            sst_5pc = 15000 * (5/100)
+        # -10%
+        if devengadot <= 15000:
+            sst_10pc = 0
+        else:
+            sst_10pc = (devengadot-15000) * (10/100)
+        sst = sst_5pc + sst_10pc
+        sst_diferencia = sst - seg_social_mesSalario
+        #Impuestos sobre ingresos del mes pago
+        iimp_3pc = 0
+        iimp_5pc = 0
+        iimp_7_5pc = 0
+        iimp_10pc = 0
+        iimp_15pc = 0
+        iimp_20pc = 0
+        iit_mespago = 0
+        # -3%
+        if salmespago > 3260:
+            if salmespago>9510:
+                iimp_3pc=(9510-3260)*(3/100)
+            else:
+                iimp_3pc=(salmespago-3260)*(3/100)
+        else:
+            iimp_3pc=0
+        # -5%
+        if salmespago > 9510:
+            if salmespago>15000:
+                iimp_5pc=(15000-9510)*(5/100)
+            else:
+                iimp_5pc=(salmespago-9510)*(5/100)
+        else:
+            iimp_5pc=0
+        # -7.5%
+        if salmespago > 15000:
+            if salmespago>20000:
+                iimp_7_5pc=(20000-15000)*(7.5/100)
+            else:
+                iimp_7_5pc=(salmespago-15000)*(7.5/100)
+        else:
+            iimp_7_5pc=0
+        # -10%
+        if salmespago > 20000:
+            if salmespago>25000:
+                iimp_10pc=(25000-20000)*(10/100)
+            else:
+                iimp_10pc=(salmespago-20000)*(10/100)
+        else:
+            iimp_10pc=0
+        # -15%
+        if salmespago > 25000:
+            if salmespago>30000:
+                iimp_15pc=(30000-25000)*(15/100)
+            else:
+                iimp_15pc=(salmespago-25000)*(15/100)
+        else:
+            iimp_15pc=0
+        # -20%
+        if salmespago > 30000:
+            iimp_20pc=(salmespago-30000)*(20/100)
+        else:
+            iimp_20pc=0
+        iit_mespago = iimp_3pc+iimp_5pc+iimp_7_5pc+iimp_10pc+iimp_15pc+iimp_20pc
+        #Impuestos sobre ingresos totales
+        iit_3pc = 0
+        iit_5pc = 0
+        iit_7_5pc = 0
+        iit_10pc = 0
+        iit_15pc = 0
+        iit_20pc = 0
+        iit = 0
+        iit_diferencia = 0
+
+        # -3%
+        if devengadot > 3260:
+            if devengadot>9510:
+                iit_3pc=(9510-3260)*(3/100)
+            else:
+                iit_3pc=(devengadot-3260)*(3/100)
+        else:
+            iit_3pc=0
+        # -5%
+        if devengadot > 9510:
+            if devengadot>15000:
+                iit_5pc=(15000-9510)*(5/100)
+            else:
+                iit_5pc=(devengadot-9510)*(5/100)
+        else:
+            iit_5pc=0
+        # -7.5%
+        if devengadot > 15000:
+            if devengadot>20000:
+                iit_7_5pc=(20000-15000)*(7.5/100)
+            else:
+                iit_7_5pc=(devengadot-15000)*(7.5/100)
+        else:
+            iit_7_5pc=0
+        # -10%
+        if devengadot > 20000:
+            if devengadot>25000:
+                iit_10pc=(25000-20000)*(10/100)
+            else:
+                iit_10pc=(devengadot-20000)*(10/100)
+        else:
+            iit_10pc=0
+        # -15%
+        if devengadot > 25000:
+            if devengadot>30000:
+                iit_15pc=(30000-25000)*(15/100)
+            else:
+                iit_15pc=(devengadot-25000)*(15/100)
+        else:
+            iit_15pc=0
+        # -20%
+        if devengadot > 30000:
+            iit_20pc=(devengadot-30000)*(20/100)
+        else:
+            iit_20pc=0
+        iit = iit_3pc+iit_5pc+iit_7_5pc+iit_10pc+iit_15pc+iit_20pc
+        iit_diferencia = iit-iit_mespago
+
+        #Neto a cobrar
+        respMat = 0
+        tupla = []
+        for rm in self.db_rm:
+            idemp= "'"+emp+"'"
+            if idemp in rm:
+                tupla=rm
+        if tupla:
+            respMat = tupla[1]
+        neto_salario = utildev-sst_diferencia-iit_diferencia-respMat
+        return [utildev,sst_diferencia,iit_diferencia,respMat,neto_salario]
+
+    
+    #Definiendo tree view de periodo    
     def informeUtil(self):   
         path = "file/utilidades_disteco.xlsx"
         row = 6 
@@ -543,6 +703,11 @@ class FormularioCalcImpDesign():
                 sheet['X'+str(i)] = 0
             sheet['Y'+str(i)] = f'=U{i}'  
             sheet['Z'+str(i)] = f'=X{i}+Y{i}'
+            #[utildev,sst_diferencia,iit_diferencia,respMat,neto_salario]
+            resumencalc_eco = self.getResumenUtilEco("'"+sheet['C'+str(i)].value+"'",float(self.getDevengadoCalc("'"+sheet['C'+str(i)].value+"'")),float(sheet['X'+str(i)].value))
+            queryinsert_hutil = "INSERT INTO postgres.public.utilidades_printhist(codigo_empleado,name_utilidad,ci,nombap,devengado_util,aporte_ss,imp_ingp,descuento_rm,neto_cobrar,area) \
+                VALUES("+sheet['C'+str(i)].value+",'"+self.getUtiliDist()[1]+"_"+str(self.getUtiliDist()[3])+"','"+sheet['D'+str(i)].value+"','"+sheet['E'+str(i)].value+"',"+str(resumencalc_eco[0])+","+str(resumencalc_eco[0])+","+str(resumencalc_eco[1])+","+str(resumencalc_eco[2])+","+str(resumencalc_eco[3])+","+str(resumencalc_eco[4])+",'')"
+            print(queryinsert_hutil)
             
         
 
