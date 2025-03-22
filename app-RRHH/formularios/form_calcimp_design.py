@@ -55,7 +55,7 @@ class FormularioCalcImpDesign():
             self.lb_frame_calceco.place(x=840, y=130, width=152,height=110)
 
             #Empleado seleccionado
-            self.lb_sempleado_calceco = tk.Label(self.lb_frame_calceco, text='Empleado seleccionado', justify='center', bg=COLOR_CUERPO_PRINCIPAL, font=('Times', 11))
+            self.lb_sempleado_calceco = tk.Label(self.lb_frame_calceco, text='Empleado seleccionado', width=15, justify='center', bg=COLOR_CUERPO_PRINCIPAL, font=('Times', 11))
             self.lb_sempleado_calceco.grid(row=0,column=0,columnspan=2)
             self.lb_sempleado_calceco.grid_propagate(False)
 
@@ -138,11 +138,10 @@ class FormularioCalcImpDesign():
             self.treeECalcEco.heading(column='segsoc',text='Seg/Soc')
             self.treeECalcEco.heading(column='imping',text='Imp/Ing')
             self.treeECalcEco.heading(column='descrm',text='Desc/RM')
-            self.treeECalcEco.heading(column='neto',text='Neto')
-            
-            
+            self.treeECalcEco.heading(column='neto',text='Neto')            
             self.treeECalcEco.grid(row=1,column=0, columnspan=5,ipadx=5,padx=5,pady=5)
-            #self.actualizartreeCALCECO()  
+            self.treeECalcEco.bind('<<TreeviewSelect>>',self.selectEmp)
+            self.actualizartreeCALCECO()  
               
             self.cargarDpto()   
         else:
@@ -706,13 +705,15 @@ class FormularioCalcImpDesign():
             #[utildev,sst_diferencia,iit_diferencia,respMat,neto_salario]
             resumencalc_eco = self.getResumenUtilEco("'"+sheet['C'+str(i)].value+"'",float(self.getDevengadoCalc("'"+sheet['C'+str(i)].value+"'")),float(sheet['X'+str(i)].value))
             queryinsert_hutil = "INSERT INTO postgres.public.utilidades_printhist(codigo_empleado,name_utilidad,ci,nombap,devengado_util,aporte_ss,imp_ingp,descuento_rm,neto_cobrar,area) \
-                VALUES("+sheet['C'+str(i)].value+",'"+self.getUtiliDist()[1]+"_"+str(self.getUtiliDist()[3])+"','"+sheet['D'+str(i)].value+"','"+sheet['E'+str(i)].value+"',"+str(resumencalc_eco[0])+","+str(resumencalc_eco[0])+","+str(resumencalc_eco[1])+","+str(resumencalc_eco[2])+","+str(resumencalc_eco[3])+","+str(resumencalc_eco[4])+",'')"
-            print(queryinsert_hutil)
+                VALUES('"+sheet['C'+str(i)].value+"','"+self.getUtiliDist()[1]+"_"+str(self.getUtiliDist()[3])+"','"+sheet['D'+str(i)].value+"','"+sheet['E'+str(i)].value+"',"+str(round(resumencalc_eco[0],2))+","+str(round(resumencalc_eco[1],2))+","+str(round(resumencalc_eco[2],2))+","+str(round(resumencalc_eco[3],2))+","+str(round(resumencalc_eco[4],2))+",'"+self.getDepartamentoEmp(sheet['C'+str(i)].value)[0]+"')"
+            self.cursorLoc.execute(queryinsert_hutil)
+            self.connLoc.commit()
             
         
 
         
         wb.save(path)
+        self.actualizartreeCALCECO()
         separador = os.path.sep
         dir_actual = os.path.dirname(os.path.abspath(__file__))
         dir = separador.join(dir_actual.split(separador)[:-1])
@@ -740,8 +741,8 @@ class FormularioCalcImpDesign():
     def selectEmp(self,event):
         self.empSelec = self.treeECalcEco.selection()
         selectItem=self.treeECalcEco.item(self.empSelec)
-        cadena=str(selectItem['values'][0])+" "+str(selectItem['values'][1])
-        self.lb_sempleado_calceco['text']=cadena.split(' ')[0]
+        cadena=str(selectItem['values'][0])
+        self.lb_sempleado_calceco['text']=cadena
     
     def getPagosTM(self,emp):
         querysalnom = "SELECT ppt.pago_tm_mn, ppt.cuenta_tm_cup FROM ZUNpr.dbo.p_pagos_tm AS ppt WHERE ppt.no_interno="+str(emp)
@@ -757,6 +758,12 @@ class FormularioCalcImpDesign():
     
     def informeDep(self):
         pass
+    
+    def getDepartamentoEmp(self,emp):
+        query = "SELECT a.area FROM postgres.public.empleado emp INNER JOIN postgres.public.area AS a ON emp.empleado_area_id  = a.id WHERE emp.id='"+emp+"' ORDER BY a.id"
+        self.cursorLoc.execute(query)
+        return self.cursorLoc.fetchone()
+        
 
     def getVacacionesMT(self, empleado):
         mtvacaciones = []
@@ -801,20 +808,19 @@ class FormularioCalcImpDesign():
         self.treeECalcEco.delete(*self.treeECalcEco.get_children())         
         queryEmpL=''
         if self.tx_empleado_calceco.get() != '' and self.cb_area_calceco.get() == '':
-            queryEmpL="SELECT x.* FROM postgres.public.utilidades_printhist x where x.nombreap like '%"+self.tx_empleado_calceco.get().upper()+"%' ORDER BY x.area ASC"
+            queryEmpL="SELECT x.* FROM postgres.public.utilidades_printhist x where x.nombap like '%"+self.tx_empleado_calceco.get().upper()+"%'"
         elif self.cb_area_calceco.get() != '' and self.tx_empleado_calceco.get() == '':
-            queryEmpL="SELECT x.* FROM postgres.public.utilidades_printhist x where x.area = '"+self.cb_area_calceco.get()+"' ORDER BY x.area ASC"
+            queryEmpL="SELECT x.* FROM postgres.public.utilidades_printhist x where x.area = '"+self.cb_area_calceco.get()+"'"
         elif self.tx_empleado_calceco.get() != '' and self.cb_area_calceco.get() != '':
-            queryEmpL="SELECT x.* FROM postgres.public.utilidades_printhist x where x.nombreap like '%"+self.tx_empleado_calceco.get().upper()+"%' and x.area = '"+self.cb_area_calceco.get()+"' ORDER BY a.id ASC"
+            queryEmpL="SELECT x.* FROM postgres.public.utilidades_printhist x where x.nombap like '%"+self.tx_empleado_calceco.get().upper()+"%' and x.area = '"+self.cb_area_calceco.get()+"'"
         else:
-            queryEmpL='SELECT x.* FROM postgres.public.utilidades_printhist x ORDER BY a.id'
-        
+            queryEmpL='SELECT x.* FROM postgres.public.utilidades_printhist x'        
          
         self.cursorLoc.execute(queryEmpL)
 
         slistEmp = self.cursorLoc.fetchall()            
         for emp in slistEmp:
-            self.treeECalcEco.insert('','end',values=("'"+emp[0]+"'",emp[3],emp[4],emp[5],emp[6],emp[7],emp[8]))
+            self.treeECalcEco.insert('','end',values=("'"+str(emp[1])+"'",emp[3],emp[4],emp[5],emp[6],emp[7],emp[8],emp[9]))
 
     def calcCoeficienteEva(self, emp):
         listPer = self.getPeriodo()
