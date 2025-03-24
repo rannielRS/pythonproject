@@ -9,6 +9,8 @@ import os
 import subprocess
 import tkinter.font as tkfont
 from openpyxl.styles import Font, colors, fills, Alignment, PatternFill, NamedStyle
+from util.autocompletecombobox import AutocompleteCombobox
+from copy import copy
 
 
 
@@ -54,15 +56,25 @@ class FormularioCalcImpDesign():
             self.lb_frame_calceco = ttk.Labelframe(panel_principal, text='Descuento por RM', style='TLabelframe')
             self.lb_frame_calceco.place(x=840, y=130, width=152,height=110)
 
-            #Empleado seleccionado
-            self.lb_sempleado_calceco = tk.Label(self.lb_frame_calceco, text='Empleado seleccionado', width=15, justify='center', bg=COLOR_CUERPO_PRINCIPAL, font=('Times', 11))
-            self.lb_sempleado_calceco.grid(row=0,column=0,columnspan=2)
-            self.lb_sempleado_calceco.grid_propagate(False)
+            #Empleado label
+            self.lb_sempleado_calceco = tk.Label(self.lb_frame_calceco, text='Emp.:', width=5, justify='center', bg=COLOR_CUERPO_PRINCIPAL, font=('Times', 11))
+            self.lb_sempleado_calceco.grid(row=0,column=0, padx=5, pady=5)
+            self.lb_sempleado_calceco.grid_propagate(False)            
+
+            #Listado de empleados por id
+            self.cb_emp_ninterno= ttk.Combobox(self.lb_frame_calceco, width=6)
+            #self.cb_periodo.current(0)
+            self.cb_emp_ninterno.grid(row=0,column=1, padx=5, pady=5)
+
+            #LABEL COMBO empleado   
+            self.lb_list_emp = tk.Label(self.lb_frame_calceco, text='Monto:', width=5, justify='center', bg=COLOR_CUERPO_PRINCIPAL, font=('Times', 11))
+            self.lb_list_emp.grid(row=1,column=0, padx=5, pady=5)
+            self.lb_list_emp.grid_propagate(False)
 
             #Descuento
-            self.textoComentInv_calceco=ttk.Entry(self.lb_frame_calceco, font=('Times', 11), width=15, textvariable=self.db_rm_str)
+            self.textoComentInv_calceco=ttk.Entry(self.lb_frame_calceco, font=('Times', 11), width=10, textvariable=self.db_rm_str)
             #self.textoComentInv_calceco.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
-            self.textoComentInv_calceco.grid(row=1,column=0,columnspan=2)
+            self.textoComentInv_calceco.grid(row=1,column=1, padx=5, pady=5)
             self.textoComentInv_calceco.grid_propagate(False)
 
             #Definir imagenes de botones
@@ -142,16 +154,14 @@ class FormularioCalcImpDesign():
             self.treeECalcEco.grid(row=1,column=0, columnspan=5,ipadx=5,padx=5,pady=5)
             self.treeECalcEco.bind('<<TreeviewSelect>>',self.selectEmp)
             self.actualizartreeCALCECO()  
-              
+            self.cargarEmpCB()  
             self.cargarDpto()   
         else:
             messagebox.showinfo('Notificación','Debe registrar un período de evaluación')
 
     def deleteInv(self):
-        if self.empSelec:            
-            cadena = self.lb_sempleado_calceco['text']
-            pesp = cadena.index(' ')
-            idemp=cadena[0:pesp]
+        idemp = self.cb_emp_ninterno.get()
+        if idemp:             
             if self.db_rm != []:
                 for ecrm in self.db_rm:
                     finded = False
@@ -159,8 +169,7 @@ class FormularioCalcImpDesign():
                         self.db_rm.remove(ecrm)
                         finded = True
                         messagebox.showinfo('Confirmación','Se eliminó el trabajador invalidado correctamente')
-                        self.treeECalcEco.selection_remove(self.treeECalcEco.selection())
-                        self.lb_sempleado_calceco['text']='Empleado seleccionado'
+                        self.cb_emp_ninterno.set('')
                         self.db_rm_str.set('')
                 if finded != True:
                     messagebox.showinfo('Sin acción','No existe ese trabajador en el registro')
@@ -172,10 +181,8 @@ class FormularioCalcImpDesign():
 
 
     def addInv(self):
-        if self.empSelec:            
-            cadena = self.lb_sempleado_calceco['text']
-            pesp = cadena.index(' ')
-            idemp=cadena[0:pesp]
+        idemp = self.cb_emp_ninterno.get()
+        if idemp:                 
             valor = self.textoComentInv_calceco.get()
             if valor != '':
                 finded = False
@@ -187,12 +194,10 @@ class FormularioCalcImpDesign():
                 else:                    
                     self.db_rm.append((idemp,valor))
                     messagebox.showinfo('Confirmación','Se registró el trabajador invalidado correctamente')
-                    self.treeECalcEco.selection_remove(self.treeECalcEco.selection())
-                    self.lb_sempleado_calceco['text']='Empleado seleccionado'
+                    self.cb_emp_ninterno.set('')
+                    self.db_rm_str.set('')
             else:
-                messagebox.showerror('Error de validación','Debe teclear una descripción')
-        else:
-            messagebox.showinfo('Información','Debe seleccionar el trabajador')
+                messagebox.showerror('Error de validación','Debe teclear el monto a descontar')
 
     
     def getDevengadoCalc(self, emp):
@@ -366,11 +371,11 @@ class FormularioCalcImpDesign():
         respMat = 0
         tupla = []
         for rm in self.db_rm:
-            idemp= "'"+emp+"'"
+            idemp= emp
             if idemp in rm:
                 tupla=rm
         if tupla:
-            respMat = tupla[1]
+            respMat = float(tupla[1])
         neto_salario = utildev-sst_diferencia-iit_diferencia-respMat
         return [utildev,sst_diferencia,iit_diferencia,respMat,neto_salario]
 
@@ -387,6 +392,7 @@ class FormularioCalcImpDesign():
         if self.cb_periodo_calceco.get() == '':
             return messagebox.showwarning('Validación de información','Debe seleccionar el mes del pago')
         
+        self.limpiarHistUtil()
         montoDistribuir = Decimal(self.getUtiliDist()[2])
         sheet['I3'] = montoDistribuir
         sheet['I3'].number_format = '#,##0.00'
@@ -703,15 +709,11 @@ class FormularioCalcImpDesign():
             sheet['Y'+str(i)] = f'=U{i}'  
             sheet['Z'+str(i)] = f'=X{i}+Y{i}'
             #[utildev,sst_diferencia,iit_diferencia,respMat,neto_salario]
-            resumencalc_eco = self.getResumenUtilEco("'"+sheet['C'+str(i)].value+"'",float(self.getDevengadoCalc("'"+sheet['C'+str(i)].value+"'")),float(sheet['X'+str(i)].value))
+            resumencalc_eco = self.getResumenUtilEco(sheet['C'+str(i)].value,float(self.getDevengadoCalc("'"+sheet['C'+str(i)].value+"'")),float(sheet['X'+str(i)].value))
             queryinsert_hutil = "INSERT INTO postgres.public.utilidades_printhist(codigo_empleado,name_utilidad,ci,nombap,devengado_util,aporte_ss,imp_ingp,descuento_rm,neto_cobrar,area) \
                 VALUES('"+sheet['C'+str(i)].value+"','"+self.getUtiliDist()[1]+"_"+str(self.getUtiliDist()[3])+"','"+sheet['D'+str(i)].value+"','"+sheet['E'+str(i)].value+"',"+str(round(resumencalc_eco[0],2))+","+str(round(resumencalc_eco[1],2))+","+str(round(resumencalc_eco[2],2))+","+str(round(resumencalc_eco[3],2))+","+str(round(resumencalc_eco[4],2))+",'"+self.getDepartamentoEmp(sheet['C'+str(i)].value)[0]+"')"
             self.cursorLoc.execute(queryinsert_hutil)
-            self.connLoc.commit()
-            
-        
-
-        
+            self.connLoc.commit()        
         wb.save(path)
         self.actualizartreeCALCECO()
         separador = os.path.sep
@@ -738,11 +740,66 @@ class FormularioCalcImpDesign():
         except Exception as e:
             print("Error:", e)
 
+    #  ----------------------------------------
+    #  Funcion de Ayuda
+    #  Mantener estilos y formatos
+    #  Entre celdas
+    #  requiere importar copy
+    #  ----------------------------------------
+    def copyStyle(newCell, cell):
+        if cell.has_style:
+            newCell.style = copy(cell.style)
+            newCell.font = copy(cell.font)
+            newCell.border = copy(cell.border)
+            newCell.fill = copy(cell.fill)
+            newCell.number_format = copy(cell.number_format)
+            newCell.protection = copy(cell.protection)
+            newCell.alignment = copy(cell.alignment)
+
+
+    #  ----------------------------------------
+    #  Funcion de Ayuda
+    #  Para copiar valores entre columnas
+    #  Con numero de filas variables 
+    #  ----------------------------------------
+    def copyFromTo(Fro, To, start=1, num=1, sheet=''):
+
+        i = start                               # indica la fila incial                         
+
+        while (True):                           # iterar
+            a = sheet[Fro + str(i)].value          # se coge el valor de la celda origen
+            if a == None:                       # cuando no hay nada en la celda
+                return                          # se sale de while con return
+            else:
+                # Esta parte para este caso indica
+                # 1 no tiene sentido dividir pero
+                # al mismo tiempo se le puede emplear
+                # cuando se copian valores del
+                # tipo string o date
+                if num != 1:                    
+                    sheet[To + str(i)].value = a / num
+                else:
+                    sheet[To + str(i)].value = a
+
+                # se mantienen los estilos y formatos
+                copyStyle(sheet[To + str(i)], sheet[Fro + str(i)])
+
+                # Efectos de control
+                print(i,':',a, sheet[To + str(i)].value)
+
+            # Se actualiza para la siguiente fila
+            i += 1
+
     def selectEmp(self,event):
-        self.empSelec = self.treeECalcEco.selection()
-        selectItem=self.treeECalcEco.item(self.empSelec)
-        cadena=str(selectItem['values'][0])
-        self.lb_sempleado_calceco['text']=cadena
+        selectItem=self.treeECalcEco.item(self.treeECalcEco.selection())
+        idemp=str(selectItem['values'][0])
+        self.cb_emp_ninterno.set(idemp.replace("'",""))
+        self.db_rm_str.set(selectItem['values'][6])
+
+    def limpiarHistUtil(self):
+        queryDemp = "DELETE FROM postgres.public.utilidades_printhist WHERE name_utilidad='"+self.getUtiliDist()[1]+"_"+str(self.getUtiliDist()[3])+"'"
+        self.cursorLoc.execute(queryDemp)
+        self.connLoc.commit()
     
     def getPagosTM(self,emp):
         querysalnom = "SELECT ppt.pago_tm_mn, ppt.cuenta_tm_cup FROM ZUNpr.dbo.p_pagos_tm AS ppt WHERE ppt.no_interno="+str(emp)
@@ -820,6 +877,8 @@ class FormularioCalcImpDesign():
 
         slistEmp = self.cursorLoc.fetchall()            
         for emp in slistEmp:
+            if emp[8] != 0:
+                self.db_rm.append((emp[1],emp[8]))
             self.treeECalcEco.insert('','end',values=("'"+str(emp[1])+"'",emp[3],emp[4],emp[5],emp[6],emp[7],emp[8],emp[9]))
 
     def calcCoeficienteEva(self, emp):
@@ -860,6 +919,16 @@ class FormularioCalcImpDesign():
             options.append(row[1])
         
         self.cb_area_calceco['values']=options
+
+    def cargarEmpCB(self):
+        options=[]         
+        queryP='SELECT x.id FROM postgres.public.empleado x order by x.empleado_area_id asc'
+        self.cursorLoc.execute(queryP)
+        slistEmp=self.cursorLoc.fetchall()
+        for row in slistEmp:
+            options.append(row[0])
+        
+        self.cb_emp_ninterno['values']=options
 
     def getPeriodo(self):         
         queryP='SELECT p.* FROM postgres.public.utilidades_periodo_incluye x INNER JOIN postgres.public.periodo AS p ON x.upincluye_periodo_id = p.id order by p.id asc'
