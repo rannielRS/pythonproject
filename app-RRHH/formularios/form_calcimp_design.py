@@ -9,7 +9,6 @@ import os
 import subprocess
 import tkinter.font as tkfont
 from openpyxl.styles import Font, colors, fills, Alignment, PatternFill, NamedStyle
-from util.autocompletecombobox import AutocompleteCombobox
 from copy import copy
 
 
