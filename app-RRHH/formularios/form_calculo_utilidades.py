@@ -32,6 +32,7 @@ class FormularioCalcUtilidadesDesign():
             # Definiendo controles de seleccion
             self.empSelec = ''
             self.inv=[]
+            self.inv_str = StringVar()
             self.tx_empleado = ttk.Entry(panel_principal, font=('Times', 14), width=10)
             self.tx_empleado.grid(row=0,column=0,padx=5,pady=5,ipadx=40)
 
@@ -87,17 +88,22 @@ class FormularioCalcUtilidadesDesign():
 
             #Label frame para las invalidadnte
             self.lb_frame = ttk.Labelframe(panel_principal, text='Invalidantes del pago', style='TLabelframe')
-            self.lb_frame.place(x=735, y=200, width=255,height=185,)
+            self.lb_frame.place(x=735, y=200, width=255,height=195,)
 
             #Empleado seleccionado
-            self.lb_sempleado_cu = tk.Label(self.lb_frame, text='Empleado seleccionado', justify='center', bg=COLOR_CUERPO_PRINCIPAL, font=('Times', 11))
-            self.lb_sempleado_cu.grid(row=0,column=0,columnspan=4)
+            self.lb_sempleado_cu = tk.Label(self.lb_frame, text='Empleado:',width=10, justify='center', bg=COLOR_CUERPO_PRINCIPAL, font=('Times', 11))
+            self.lb_sempleado_cu.grid(row=0,column=0)
             self.lb_sempleado_cu.grid_propagate(False)
+
+            #Listado de empleados por id
+            self.cb_empleado= ttk.Combobox(self.lb_frame, width=10)
+            #self.cb_periodo.current(0)
+            self.cb_empleado.grid(row=0,column=1, padx=5, pady=5)
 
             #Descripción invalidantes
             self.textoComentInv=tk.Text(self.lb_frame, width=30, height=6, font=('Times', 11))
             #self.textoComentInv.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
-            self.textoComentInv.grid(row=1,column=0,columnspan=3)
+            self.textoComentInv.grid(row=1,column=0,columnspan=3,padx=5,pady=5)
             self.scrollVert=ttk.Scrollbar(self.lb_frame, command=self.textoComentInv.yview)
             #self.scrollVert.pack(fill=tk.Y, side=tk.RIGHT) 
             self.scrollVert.grid(row=1,column=3, sticky = tk.NS)
@@ -165,6 +171,7 @@ class FormularioCalcUtilidadesDesign():
             self.treeEUtil.grid(row=1,column=0, columnspan=5,ipadx=5,padx=5,pady=5)
             self.treeEUtil.bind('<<TreeviewSelect>>',self.selectEmp)
             self.actualizartreeEUtil() 
+            self.cargarEmpCB()
             self.cargarDpto() 
             
             #print(self.getVacacionesMT('0091'))
@@ -183,12 +190,19 @@ class FormularioCalcUtilidadesDesign():
         #print(tdestajo)
         return tdestajo
 
+    def cargarEmpCB(self):
+        options=[]         
+        queryP='SELECT x.id FROM postgres.public.empleado x order by x.id asc'
+        self.cursorLoc.execute(queryP)
+        slistEmp=self.cursorLoc.fetchall()
+        for row in slistEmp:
+            options.append(row[0])
+        
+        self.cb_empleado['values']=options
 
     def deleteInv(self):
-        if self.empSelec:            
-            cadena = self.lb_sempleado_cu['text']
-            pesp = cadena.index(' ')
-            idemp=cadena[0:pesp]
+        if self.cb_empleado.get():           
+            idemp=self.cb_empleado.get()
             if self.inv != []:
                 for einv in self.inv:
                     finded = False
@@ -197,8 +211,8 @@ class FormularioCalcUtilidadesDesign():
                         finded = True
                         messagebox.showinfo('Confirmación','Se eliminó el trabajador invalidado correctamente')
                         self.treeEUtil.selection_remove(self.treeEUtil.selection())
-                        self.lb_sempleado_cu['text']='Empleado seleccionado'
                         self.textoComentInv.delete(1.0, END)
+                        self.cb_empleado.set('')
                 if finded != True:
                     messagebox.showinfo('Sin acción','No existe ese trabajador en el registro')
             else:
@@ -209,10 +223,8 @@ class FormularioCalcUtilidadesDesign():
 
 
     def addInv(self):
-        if self.empSelec:            
-            cadena = self.lb_sempleado_cu['text']
-            pesp = cadena.index(' ')
-            idemp=cadena[0:pesp]
+        if self.cb_empleado.get():            
+            idemp=self.cb_empleado.get()
             textarea = self.textoComentInv.get("1.0", tk.END)
             if textarea != '\n':
                 finded = False
@@ -220,14 +232,13 @@ class FormularioCalcUtilidadesDesign():
                     if einv[0] == idemp:
                         finded = True
                 if finded:
-                    return messagebox.showwarning(f'Registro repetido','El especialista ya se encentra invalidado')
+                    return messagebox.showwarning('Registro repetido','El especialista ya se encentra invalidado')
                 else:                    
                     self.inv.append((idemp,textarea))
                     messagebox.showinfo('Confirmación','Se registró el trabajador invalidado correctamente')
-
                     self.treeEUtil.selection_remove(self.treeEUtil.selection())                    
-                    self.lb_sempleado_cu['text']='Empleado seleccionado'                    
-                    self.textoComentInv.delete(1.0, END)
+                    self.textoComentInv.delete("1.0", END)
+                    self.cb_empleado.set('')
             else:
                 messagebox.showerror('Error de validación','Debe teclear una descripción')
         else:
@@ -245,7 +256,7 @@ class FormularioCalcUtilidadesDesign():
         listEmp = self.cursorLoc.fetchall()
         for empleado in listEmp:
             for t in self.inv:
-                idemp= "'"+empleado[1]+"'"
+                idemp= empleado[1]
                 if idemp in t:
                     sheet['A'+str(row)] = controw
                     sheet['B'+str(row)]=empleado[1]
@@ -386,12 +397,9 @@ class FormularioCalcUtilidadesDesign():
 
     def selectEmp(self,event):
         self.empSelec = self.treeEUtil.selection()
-        selectItem=self.treeEUtil.item(self.empSelec)
-        cadena=str(selectItem['values'][0])+" "+str(selectItem['values'][1])
-        if len(cadena) < 26:
-            self.lb_sempleado_cu['text']=cadena
-        else:
-            self.lb_sempleado_cu['text']=cadena[0:25]+"..."
+        selectItem=self.treeEUtil.item(self.empSelec)               
+        self.textoComentInv.insert(1.0,selectItem['values'][8])
+        self.cb_empleado.set(selectItem['values'][0].replace("'",""))
 
     def distribuirUtil(self):
         if self.calculo_utili == True:
@@ -401,7 +409,7 @@ class FormularioCalcUtilidadesDesign():
             self.limpiarExcel(row,path)   
             wb = openpyxl.load_workbook(path)
             sheet = wb.active
-            montoDistribuir = Decimal(self.tx_distribuir.get())
+            montoDistribuir = self.getUtiliDist()[2]#Decimal(self.tx_distribuir.get())
             sheet['I3'] = montoDistribuir
             sheet['I3'].number_format = '#,##0.00'
             
@@ -580,7 +588,7 @@ class FormularioCalcUtilidadesDesign():
                 if promEva <= 2:
                     sheet['R'+str(row)] = 0
                 else:
-                    sheet['R'+str(row)] = promEva
+                    sheet['R'+str(row)] = self.getDevengadoCalc("'"+empleado[1]+"'")[1]
                 
                 #Calculo del salario base de cada trabajador
                 sheet['S'+str(row)] = f'=M{row}*R{row}'
@@ -595,7 +603,7 @@ class FormularioCalcUtilidadesDesign():
 
             for i in range(6,row):
                 sheet['T'+str(i)] = sheet['M3'].value
-                sheet['U'+str(i)] = self.getDevengadoCalc("'"+sheet['C'+str(i)].value+"'")#f'=rounddown((S{i}*T{i}),2)'
+                sheet['U'+str(i)] = self.getDevengadoCalc("'"+sheet['C'+str(i)].value+"'")[0]#f'=rounddown((S{i}*T{i}),2)'
 
             
             wb.save(path)
@@ -648,20 +656,31 @@ class FormularioCalcUtilidadesDesign():
         self.treeEUtil.delete(*self.treeEUtil.get_children())         
         queryEmpL=''
         if self.tx_empleado.get() != '' and self.cb_departamento.get() == '':
-            queryEmpL="SELECT x.id,x.nombreap,x.ci,rc.mtsalario,rc.mtvacaciones,rc.horastt,rc.coeficienteeva_utilidades,rc.devengado FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id INNER JOIN postgres.public.resumen_calculo_utilidades AS rc ON x.id = rc.resumen_empleado_id where x.nombreap like '%"+self.tx_empleado.get().upper()+"%' ORDER BY a.id ASC"
+            queryEmpL="SELECT x.id,x.nombreap,x.ci,rc.mtsalario,rc.mtvacaciones,rc.horastt,rc.coeficienteeva_utilidades,rc.devengado,rc.descrip_coeficiente FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id INNER JOIN postgres.public.resumen_calculo_utilidades AS rc ON x.id = rc.resumen_empleado_id where x.nombreap like '%"+self.tx_empleado.get().upper()+"%' ORDER BY a.id ASC"
         elif self.cb_departamento.get() != '' and self.tx_empleado.get() == '':
-            queryEmpL="SELECT x.id,x.nombreap,x.ci,rc.mtsalario,rc.mtvacaciones,rc.horastt,rc.coeficienteeva_utilidades,rc.devengado FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id INNER JOIN postgres.public.resumen_calculo_utilidades AS rc ON x.id = rc.resumen_empleado_id where a.area = '"+self.cb_departamento.get()+"' ORDER BY a.id ASC"
+            queryEmpL="SELECT x.id,x.nombreap,x.ci,rc.mtsalario,rc.mtvacaciones,rc.horastt,rc.coeficienteeva_utilidades,rc.devengado,rc.descrip_coeficiente FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id INNER JOIN postgres.public.resumen_calculo_utilidades AS rc ON x.id = rc.resumen_empleado_id where a.area = '"+self.cb_departamento.get()+"' ORDER BY a.id ASC"
         elif self.tx_empleado.get() != '' and self.cb_departamento.get() != '':
-            queryEmpL="SELECT x.id,x.nombreap,x.ci,rc.mtsalario,rc.mtvacaciones,rc.horastt,rc.coeficienteeva_utilidades,rc.devengado FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id INNER JOIN postgres.public.resumen_calculo_utilidades AS rc ON x.id = rc.resumen_empleado_id where x.nombreap like '%"+self.tx_empleado.get().upper()+"%' and a.area = '"+self.cb_departamento.get()+"' ORDER BY a.id ASC"
+            queryEmpL="SELECT x.id,x.nombreap,x.ci,rc.mtsalario,rc.mtvacaciones,rc.horastt,rc.coeficienteeva_utilidades,rc.devengado,rc.descrip_coeficiente FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id INNER JOIN postgres.public.resumen_calculo_utilidades AS rc ON x.id = rc.resumen_empleado_id where x.nombreap like '%"+self.tx_empleado.get().upper()+"%' and a.area = '"+self.cb_departamento.get()+"' ORDER BY a.id ASC"
         else:
-            queryEmpL='SELECT x.id,x.nombreap,x.ci,rc.mtsalario,rc.mtvacaciones,rc.horastt,rc.coeficienteeva_utilidades,rc.devengado FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id INNER JOIN postgres.public.resumen_calculo_utilidades AS rc ON x.id = rc.resumen_empleado_id ORDER BY a.id ASC'
+            queryEmpL='SELECT x.id,x.nombreap,x.ci,rc.mtsalario,rc.mtvacaciones,rc.horastt,rc.coeficienteeva_utilidades,rc.devengado,rc.descrip_coeficiente FROM postgres.public.empleado AS x INNER JOIN postgres.public.area AS a ON x.empleado_area_id = a.id INNER JOIN postgres.public.resumen_calculo_utilidades AS rc ON x.id = rc.resumen_empleado_id ORDER BY a.id ASC'
                
         self.cursorLoc.execute(queryEmpL)
 
         slistEmp = self.cursorLoc.fetchall()       
         for row in slistEmp:
-            self.treeEUtil.insert('','end',values=("'"+row[0]+"'",row[1],row[2],row[3],row[4],row[5],row[6],row[7]))
+            if row[8] != '':
+                finded = False
+                for einv in self.inv:
+                    if einv[0] == row[0]:
+                        finded = True
+                if finded == False:
+                    self.inv.append((row[0],row[8]))
+                
+            self.treeEUtil.insert('','end',values=("'"+row[0]+"'",row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8]))
+        
         self.tx_total['text'] = 'Total de registros: '+str(len(self.treeEUtil.get_children()))
+        if len(self.treeEUtil.get_children()) > 0:
+            self.calculo_utili = True
             
 
     def cargarDpto(self):
@@ -675,9 +694,9 @@ class FormularioCalcUtilidadesDesign():
         self.cb_departamento['values']=options
 
     def getDevengadoCalc(self, emp):
-        query = "SELECT x.devengado FROM postgres.public.resumen_calculo_utilidades x where x.resumen_empleado_id ="+emp
+        query = "SELECT x.devengado,x.coeficienteeva_utilidades FROM postgres.public.resumen_calculo_utilidades x where x.resumen_empleado_id ="+emp
         self.cursorLoc.execute(query)
-        return self.cursorLoc.fetchone()[0]
+        return self.cursorLoc.fetchone()
 
 
     def getPeriodo(self):         
@@ -743,6 +762,15 @@ class FormularioCalcUtilidadesDesign():
                 coeficienteEva = 0
             else:
                 coeficienteEva = promEva
+
+            finded = False            
+            for einv in self.inv:
+                if einv[0] == emp[0]:
+                    finded = True
+            if finded:
+                coeficienteEva = 0.0
+                
+
             salcalc = ((Decimal(mtsalario) + Decimal(mtvacaciones))/3)*Decimal(coeficienteEva)
             registro_salcalc.append((emp[0],salcalc,mtsalario,mtvacaciones,horast))
 
@@ -757,10 +785,22 @@ class FormularioCalcUtilidadesDesign():
         for listE in registro_salcalc:
             saldevT = self.truncar_2_decimales((listE[1] * coeficiente_distribuir))
             sumasaldevt += saldevT
-            queryInsertRe = "INSERT INTO postgres.public.resumen_calculo_utilidades\
-                (resumen_empleado_id,resumen_utilidadesd_id,mtvacaciones,mtsalario,horastt,coeficienteeva_utilidades,descrip_coeficiente,devengado)\
-                    VALUES ('"+str(listE[0])+"',"+str(self.getUtiliDist()[0])+","+str(round(listE[3],2))+","+str(round(listE[2],2))+","+str(round(listE[4],2))+","+str(self.calcCoeficienteEva(listE[0]))+",'',"+str(saldevT)+")"
-            
+            finded = False  
+            descripinv = ''          
+            for einv in self.inv:
+                if einv[0] == listE[0]:
+                    finded = True
+                    descripinv = str(einv[1])
+            if finded:
+                queryInsertRe = "INSERT INTO postgres.public.resumen_calculo_utilidades\
+                    (resumen_empleado_id,resumen_utilidadesd_id,mtvacaciones,mtsalario,horastt,coeficienteeva_utilidades,descrip_coeficiente,devengado)\
+                        VALUES ('"+str(listE[0])+"',"+str(self.getUtiliDist()[0])+","+str(round(listE[3],2))+","+str(round(listE[2],2))+","+str(round(listE[4],2))+",0.0,'"+descripinv.strip()+"',"+str(saldevT)+")"
+            else:
+                queryInsertRe = "INSERT INTO postgres.public.resumen_calculo_utilidades\
+                    (resumen_empleado_id,resumen_utilidadesd_id,mtvacaciones,mtsalario,horastt,coeficienteeva_utilidades,descrip_coeficiente,devengado)\
+                        VALUES ('"+str(listE[0])+"',"+str(self.getUtiliDist()[0])+","+str(round(listE[3],2))+","+str(round(listE[2],2))+","+str(round(listE[4],2))+","+str(self.calcCoeficienteEva(listE[0]))+",'',"+str(saldevT)+")"
+           
+
             self.cursorLoc.execute(queryInsertRe)
             self.connLoc.commit()
         self.calculo_utili = True
