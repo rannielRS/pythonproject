@@ -32,6 +32,7 @@ class FormularioCalcImpDesign():
             self.tx_empleado_calceco.grid(row=0,column=0,padx=5,pady=5,ipadx=40)
             self.db_rm = []
             self.db_rm_str = StringVar()
+            self.registro_informe = False
             #Boton para buscar empleados        
             self.btn_bempleados_calceco = tk.Button(panel_principal, text="Buscar", font=(
                 'Times', 13), bg=COLOR_BARRA_SUPERIOR, bd=0, fg=COLOR_CUERPO_PRINCIPAL, command=self.actualizartreeCALCECO)
@@ -200,9 +201,9 @@ class FormularioCalcImpDesign():
 
     
     def getDevengadoCalc(self, emp):
-        query = "SELECT x.devengado FROM postgres.public.resumen_calculo_utilidades x where x.resumen_empleado_id ="+emp
+        query = "SELECT x.devengado,x.coeficienteeva_utilidades FROM postgres.public.resumen_calculo_utilidades x where x.resumen_empleado_id ="+emp
         self.cursorLoc.execute(query)
-        return self.cursorLoc.fetchone()[0]
+        return self.cursorLoc.fetchone()
     
     def getUtiliDist(self):
         queryUD="SELECT x.* FROM postgres.public.utilidades_distribucion x"
@@ -682,7 +683,14 @@ class FormularioCalcImpDesign():
             if promEva <= 2:
                 sheet['R'+str(row)] = 0
             else:
-                sheet['R'+str(row)] = promEva
+                sheet['R'+str(row)] = self.getDevengadoCalc("'"+empleado[1]+"'")[1]
+
+            resp_mat = 0
+            for edb_rm in self.db_rm:
+                if edb_rm[0] == empleado[1]:
+                    resp_mat = edb_rm[1]
+            sheet['AW'+str(row)] = round(resp_mat,2)
+            
             
             #Calculo del salario base de cada trabajador
             sheet['S'+str(row)] = f'=M{row}*R{row}' 
@@ -697,7 +705,7 @@ class FormularioCalcImpDesign():
 
         for i in range(6,row):
             sheet['T'+str(i)] = sheet['M3'].value
-            sheet['U'+str(i)] = self.getDevengadoCalc("'"+sheet['C'+str(i)].value+"'")#f'=rounddown((S{i}*T{i}),2)'
+            sheet['U'+str(i)] = self.getDevengadoCalc("'"+sheet['C'+str(i)].value+"'")[0]#f'=rounddown((S{i}*T{i}),2)'
             #iMPUESTOS
             periodoPago = self.cb_periodo_calceco.get().split('-')[0]
             salarioMesp = self.getSalarioNomMes("'"+sheet['C'+str(i)].value+"'",periodoPago)
@@ -707,12 +715,14 @@ class FormularioCalcImpDesign():
                 sheet['X'+str(i)] = 0
             sheet['Y'+str(i)] = f'=U{i}'  
             sheet['Z'+str(i)] = f'=X{i}+Y{i}'
+
             #[utildev,sst_diferencia,iit_diferencia,respMat,neto_salario]
-            resumencalc_eco = self.getResumenUtilEco(sheet['C'+str(i)].value,float(self.getDevengadoCalc("'"+sheet['C'+str(i)].value+"'")),float(sheet['X'+str(i)].value))
+            resumencalc_eco = self.getResumenUtilEco(sheet['C'+str(i)].value,float(self.getDevengadoCalc("'"+sheet['C'+str(i)].value+"'")[0]),float(sheet['X'+str(i)].value))
             queryinsert_hutil = "INSERT INTO postgres.public.utilidades_printhist(codigo_empleado,name_utilidad,ci,nombap,devengado_util,aporte_ss,imp_ingp,descuento_rm,neto_cobrar,area) \
                 VALUES('"+sheet['C'+str(i)].value+"','"+self.getUtiliDist()[1]+"_"+str(self.getUtiliDist()[3])+"','"+sheet['D'+str(i)].value+"','"+sheet['E'+str(i)].value+"',"+str(round(resumencalc_eco[0],2))+","+str(round(resumencalc_eco[1],2))+","+str(round(resumencalc_eco[2],2))+","+str(round(resumencalc_eco[3],2))+","+str(round(resumencalc_eco[4],2))+",'"+self.getDepartamentoEmp(sheet['C'+str(i)].value)[0]+"')"
             self.cursorLoc.execute(queryinsert_hutil)
-            self.connLoc.commit()        
+            self.connLoc.commit()  
+            self.registro_informe = True      
         wb.save(path)
         self.actualizartreeCALCECO()
         separador = os.path.sep
@@ -877,8 +887,16 @@ class FormularioCalcImpDesign():
         slistEmp = self.cursorLoc.fetchall()            
         for emp in slistEmp:
             if emp[8] != 0:
-                self.db_rm.append((emp[1],emp[8]))
+                finded = False
+                for edb_rm in self.db_rm:
+                    if edb_rm[0] == emp[1]:
+                        finded = True
+                if finded == False:
+                    self.db_rm.append((emp[1],emp[8]))
+                
             self.treeECalcEco.insert('','end',values=("'"+str(emp[1])+"'",emp[3],emp[4],emp[5],emp[6],emp[7],emp[8],emp[9]))
+        if len(self.treeECalcEco.get_children()) > 0:
+            self.registro_informe = True
 
     def calcCoeficienteEva(self, emp):
         listPer = self.getPeriodo()

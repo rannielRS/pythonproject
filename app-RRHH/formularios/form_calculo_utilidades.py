@@ -732,6 +732,12 @@ class FormularioCalcUtilidadesDesign():
         self.cursorLoc.execute(queryP)
         return self.cursorLoc.fetchone()[0]
 
+    def getListOP(self,emp):
+        queryOP= "SELECT o.monto FROM postgres.public.opago AS o WHERE opago_empleado_id="+str(emp)
+        self.cursorLoc.execute(queryOP)
+        return self.cursorLoc.fetchall()
+
+
     def showResumen(self):                 
         queryP="SELECT emp.id,emp.nombreap,emp.ci,a.area  FROM postgres.public.empleado emp INNER JOIN postgres.public.area AS a ON emp.empleado_area_id  = a.id ORDER BY a.id"
         self.cursorLoc.execute(queryP)
@@ -756,6 +762,12 @@ class FormularioCalcUtilidadesDesign():
                 horast += rowsal[1]
             for rowvaca in listVaca:
                 mtvacaciones += rowvaca[0]
+
+            lop=self.getListOP("'"+emp[0]+"'")
+            if len(lop)>0:
+                for op in lop:
+                   mtsalario+=op[0] 
+
 
             promEva = self.calcCoeficienteEva(emp[0])
             if promEva <= 2:

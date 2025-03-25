@@ -23,6 +23,7 @@ class FormularioOtrosPagosDesign():
             # Definiendo controles de seleccion
             self.store = self.cargarTP()
             self.empSelec = ''
+            self.monto_str = StringVar()
             self.tx_empleado_op = ttk.Entry(panel_principal, font=('Times', 14), width=10)
             self.tx_empleado_op.grid(row=0,column=0,padx=5,pady=5,ipadx=40)
 
@@ -84,7 +85,7 @@ class FormularioOtrosPagosDesign():
             #self.cb_periodo.current(0)
             self.cb_periodo_op.place(x=808, y=200) 
 
-            self.tx_monto_op = ttk.Entry(panel_principal, font=('Times', 14), width=10)
+            self.tx_monto_op = ttk.Entry(panel_principal, font=('Times', 14), width=10, textvariable=self.monto_str)
             #self.cb_periodo.current(0)
             self.tx_monto_op.place(x=808, y=251)
       
@@ -166,6 +167,10 @@ class FormularioOtrosPagosDesign():
                 self.connLoc.commit()            
                 #self.treeEOP.set(self.empSelec, column='opagos', value=self.cb_tp_op.get())  
                 messagebox.showinfo('Confirmación','La información del pago se registró satisfactoriamente') 
+                self.cb_periodo_op.set('')
+                self.cb_tp_op.set('')
+                self.monto_str.set('')
+                self.lb_sempleado_op['text']='Empleado seleccionado'
             else:
                 messagebox.showinfo('Campos vacíos','Existen campos vacíos, debe completarlos')
         else:            
@@ -189,6 +194,10 @@ class FormularioOtrosPagosDesign():
                     #self.treeEOP.set(self.empSelec, column='opagos', value=self.cb_tp_op.get())  
                 else:
                     messagebox.showinfo('Confirmación','La información se eliminó correctamente') 
+                    self.cb_periodo_op.set('')
+                    self.cb_tp_op.set('')
+                    self.monto_str.set('')
+                    self.lb_sempleado_op['text']='Empleado seleccionado'
             else:
                 messagebox.showinfo('Campos vacíos','Existen campos vacíos, debe completarlos')
         else:            
