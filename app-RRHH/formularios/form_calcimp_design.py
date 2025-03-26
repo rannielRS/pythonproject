@@ -689,7 +689,7 @@ class FormularioCalcImpDesign():
             for edb_rm in self.db_rm:
                 if edb_rm[0] == empleado[1]:
                     resp_mat = edb_rm[1]
-            sheet['AW'+str(row)] = round(resp_mat,2)
+            sheet['AW'+str(row)] = resp_mat
             
             
             #Calculo del salario base de cada trabajador
@@ -749,55 +749,9 @@ class FormularioCalcImpDesign():
         except Exception as e:
             print("Error:", e)
 
-    #  ----------------------------------------
-    #  Funcion de Ayuda
-    #  Mantener estilos y formatos
-    #  Entre celdas
-    #  requiere importar copy
-    #  ----------------------------------------
-    def copyStyle(newCell, cell):
-        if cell.has_style:
-            newCell.style = copy(cell.style)
-            newCell.font = copy(cell.font)
-            newCell.border = copy(cell.border)
-            newCell.fill = copy(cell.fill)
-            newCell.number_format = copy(cell.number_format)
-            newCell.protection = copy(cell.protection)
-            newCell.alignment = copy(cell.alignment)
-
-
-    #  ----------------------------------------
-    #  Funcion de Ayuda
-    #  Para copiar valores entre columnas
-    #  Con numero de filas variables 
-    #  ----------------------------------------
-    def copyFromTo(Fro, To, start=1, num=1, sheet=''):
-
-        i = start                               # indica la fila incial                         
-
-        while (True):                           # iterar
-            a = sheet[Fro + str(i)].value          # se coge el valor de la celda origen
-            if a == None:                       # cuando no hay nada en la celda
-                return                          # se sale de while con return
-            else:
-                # Esta parte para este caso indica
-                # 1 no tiene sentido dividir pero
-                # al mismo tiempo se le puede emplear
-                # cuando se copian valores del
-                # tipo string o date
-                if num != 1:                    
-                    sheet[To + str(i)].value = a / num
-                else:
-                    sheet[To + str(i)].value = a
-
-                # se mantienen los estilos y formatos
-                copyStyle(sheet[To + str(i)], sheet[Fro + str(i)])
-
-                # Efectos de control
-                print(i,':',a, sheet[To + str(i)].value)
-
-            # Se actualiza para la siguiente fila
-            i += 1
+    def colorearCELL(self,cell,color):
+     cellColor = PatternFill(end_color=color, fill_type='darkUp')
+     cell.fill = cellColor
 
     def selectEmp(self,event):
         selectItem=self.treeECalcEco.item(self.treeECalcEco.selection())
@@ -823,7 +777,202 @@ class FormularioCalcImpDesign():
         return result
     
     def informeDep(self):
-        pass
+        path = "file/utilidades_disteco_dpto.xlsx"
+        row = 11 
+        controw = 1
+        departamento = ''
+        subdev = 0
+        subss = 0
+        subii = 0
+        subrm = 0
+        subneto = 0
+        self.limpiarExcel(row,path)  
+        self.unmergexlsop(path,row) 
+        wb = openpyxl.load_workbook(path)
+        sheet = wb.active
+        alignmentText = Alignment(horizontal=LEFT)
+        alignmentTextSub = Alignment(horizontal=RIGHT)
+        alignmentNumber = Alignment(horizontal=CENTER)
+        alignmentHeader = Alignment(horizontal=CENTER, vertical=CENTER, wrapText=True)
+        text_format = Font(
+        bold = False,
+        name = 'Calibri',
+        size = '0',
+        color = colors.BLACK ) 
+        text_header_format = Font(
+        bold = True,
+        name = 'Calibri',
+        size = '0',
+        color = colors.BLACK)  
+        number_format = Font(
+        bold = False,
+        name = 'Calibri',
+        size = '0',
+        color = colors.BLACK)
+        #id	codigo_empleado	name_utilidad	ci	nombap	devengado_util	aporte_ss	imp_ingp	descuento_rm	neto_cobrar	area
+        queryP="SELECT uph.* FROM postgres.public.utilidades_printhist AS uph"
+        self.cursorLoc.execute(queryP)
+        listEmpUPH = self.cursorLoc.fetchall()
+        for empleado in listEmpUPH:            
+            if departamento != empleado[10]:
+                if row != 11: 
+                    sheet.row_dimensions[row].height = 15                              
+                    sheet['E'+str(row)].font +=  text_header_format
+                    sheet['E'+str(row)].alignment += alignmentTextSub
+                    sheet['E'+str(row)] =  'Sub Total'
+                    self.colorearCELL(sheet['E'+str(row)],'dce2e2')
+                    sheet['F'+str(row)].font +=  number_format
+                    sheet['F'+str(row)].alignment += alignmentNumber
+                    sheet['F'+str(row)] =  subdev
+                    self.colorearCELL(sheet['F'+str(row)],'dce2e2')
+                    sheet['G'+str(row)].font +=  number_format
+                    sheet['G'+str(row)].alignment += alignmentNumber
+                    sheet['G'+str(row)] =  subss
+                    self.colorearCELL(sheet['G'+str(row)],'dce2e2')
+                    sheet['H'+str(row)].font +=  number_format
+                    sheet['H'+str(row)].alignment += alignmentNumber
+                    sheet['H'+str(row)] =  subii
+                    self.colorearCELL(sheet['H'+str(row)],'dce2e2')
+                    sheet['I'+str(row)].font +=  number_format
+                    sheet['I'+str(row)].alignment += alignmentNumber
+                    sheet['I'+str(row)] =  subrm
+                    self.colorearCELL(sheet['I'+str(row)],'dce2e2')
+                    sheet['J'+str(row)].font +=  number_format
+                    sheet['J'+str(row)].alignment += alignmentNumber
+                    sheet['J'+str(row)] =  subneto
+                    self.colorearCELL(sheet['J'+str(row)],'dce2e2')
+                    self.colorearCELL(sheet['K'+str(row)],'dce2e2')
+                    row += 2 
+                    subdev = 0
+                    subss = 0
+                    subii = 0
+                    subrm = 0
+                    subneto = 0                   
+                departamento = empleado[10]
+                #Pinto encabezado
+                sheet.row_dimensions[row].height = 55
+                sheet.merge_cells("C"+str(row)+":E"+str(row))
+                sheet['B'+str(row)].font +=  text_header_format
+                sheet['B'+str(row)].alignment += alignmentHeader
+                sheet['B'+str(row)] =  'No.'
+                self.colorearCELL(sheet['B'+str(row)],'dce2e2')
+                sheet['C'+str(row)].font +=  text_header_format
+                sheet['C'+str(row)].alignment += alignmentHeader
+                sheet['C'+str(row)] =  'Unidad Organizativa' 
+                self.colorearCELL(sheet['C'+str(row)],'dce2e2')               
+                sheet['F'+str(row)].font +=  text_header_format
+                sheet['F'+str(row)].alignment += alignmentHeader
+                sheet['F'+str(row)] =  'Devengado Utilidades III trimestre'
+                self.colorearCELL(sheet['F'+str(row)],'dce2e2')
+                sheet['G'+str(row)].font +=  text_header_format
+                sheet['G'+str(row)].alignment += alignmentHeader
+                sheet['G'+str(row)] =  'Seguridad Social Diferencia'
+                self.colorearCELL(sheet['G'+str(row)],'dce2e2')
+                sheet['H'+str(row)].font +=  text_header_format
+                sheet['H'+str(row)].alignment += alignmentHeader
+                sheet['H'+str(row)] =  'Impuestos sobre ingresos Diferencia'
+                self.colorearCELL(sheet['H'+str(row)],'dce2e2')
+                sheet['I'+str(row)].font +=  text_header_format
+                sheet['I'+str(row)].alignment += alignmentHeader
+                sheet['I'+str(row)] =  'Descuentos Resp Mat.'
+                self.colorearCELL(sheet['I'+str(row)],'dce2e2')
+                sheet['J'+str(row)].font +=  text_header_format
+                sheet['J'+str(row)].alignment += alignmentHeader
+                sheet['J'+str(row)] =  'Neto a Cobrar'
+                self.colorearCELL(sheet['J'+str(row)],'dce2e2')
+                sheet['K'+str(row)].font +=  text_header_format
+                sheet['K'+str(row)].alignment += alignmentHeader
+                sheet['K'+str(row)] =  'Firma'
+                self.colorearCELL(sheet['K'+str(row)],'dce2e2')
+                row += 1
+                #Pinto departamento
+                sheet.merge_cells("B"+str(row)+":K"+str(row))
+                sheet['B'+str(row)].font +=  text_header_format
+                sheet['B'+str(row)].alignment += alignmentHeader
+                sheet['B'+str(row)] =  empleado[10]
+                row += 1
+
+            sheet.row_dimensions[row].height = 15
+            sheet['B'+str(row)].font +=  number_format
+            sheet['B'+str(row)].alignment += alignmentNumber
+            sheet['B'+str(row)] =  controw
+            sheet['C'+str(row)].font +=  number_format
+            sheet['C'+str(row)].alignment += alignmentNumber
+            sheet['C'+str(row)] =  empleado[1]
+            sheet['D'+str(row)].font +=  number_format
+            sheet['D'+str(row)].alignment += alignmentNumber
+            sheet['D'+str(row)] =  empleado[3]
+            sheet['E'+str(row)].font +=  text_format
+            sheet['E'+str(row)].alignment += alignmentText
+            sheet['E'+str(row)] =  empleado[4]
+            sheet['F'+str(row)].font +=  number_format
+            sheet['F'+str(row)].alignment += alignmentNumber
+            sheet['F'+str(row)] =  empleado[5]
+            subdev += empleado[5]
+            sheet['G'+str(row)].font +=  number_format
+            sheet['G'+str(row)].alignment += alignmentNumber
+            sheet['G'+str(row)] =  empleado[6]
+            subss += empleado[6]
+            sheet['H'+str(row)].font +=  number_format
+            sheet['H'+str(row)].alignment += alignmentNumber
+            sheet['H'+str(row)] =  empleado[7]
+            subii += empleado[7]
+            sheet['I'+str(row)].font +=  number_format
+            sheet['I'+str(row)].alignment += alignmentNumber
+            sheet['I'+str(row)] =  empleado[8]
+            subrm += empleado[8]
+            sheet['J'+str(row)].font +=  number_format
+            sheet['J'+str(row)].alignment += alignmentNumber
+            sheet['J'+str(row)] =  empleado[9]
+            subneto += empleado[9] 
+            sheet['K'+str(row)].font +=  number_format
+            sheet['K'+str(row)].alignment += alignmentNumber
+            if self.getPagosTM(empleado[1])['pago_tm_mn'] == 1:
+                sheet['K'+str(row)] = 'TM'
+            else:
+                sheet['K'+str(row)] = ''
+            
+            row += 1
+            controw += 1
+        sheet.row_dimensions[row].height = 15
+        sheet['E'+str(row)].font +=  text_header_format
+        sheet['E'+str(row)].alignment += alignmentTextSub
+        sheet['E'+str(row)] =  'Sub Total'
+        self.colorearCELL(sheet['E'+str(row)],'dce2e2')
+        sheet['F'+str(row)].font +=  number_format
+        sheet['F'+str(row)].alignment += alignmentNumber
+        sheet['F'+str(row)] =  subdev
+        self.colorearCELL(sheet['F'+str(row)],'dce2e2')
+        sheet['G'+str(row)].font +=  number_format
+        sheet['G'+str(row)].alignment += alignmentNumber
+        sheet['G'+str(row)] =  subss
+        self.colorearCELL(sheet['G'+str(row)],'dce2e2')
+        sheet['H'+str(row)].font +=  number_format
+        sheet['H'+str(row)].alignment += alignmentNumber
+        sheet['H'+str(row)] =  subii
+        self.colorearCELL(sheet['H'+str(row)],'dce2e2')
+        sheet['I'+str(row)].font +=  number_format
+        sheet['I'+str(row)].alignment += alignmentNumber
+        sheet['I'+str(row)] =  subrm
+        self.colorearCELL(sheet['I'+str(row)],'dce2e2')
+        sheet['J'+str(row)].font +=  number_format
+        sheet['J'+str(row)].alignment += alignmentNumber
+        sheet['J'+str(row)] =  subneto
+        self.colorearCELL(sheet['J'+str(row)],'dce2e2')
+        self.colorearCELL(sheet['K'+str(row)],'dce2e2')
+        wb.save(path)
+        self.convert_xlsx_to_pdf(path,"utilidades_disteco_dpto")
+        
+
+    def unmergexlsop(self,path,afila):
+        self.limpiarExcel(afila,path) 
+        wb = openpyxl.load_workbook(path)
+        sheet = wb.active
+        for items in sorted(sheet.merged_cell_ranges):
+            if str(items) != 'B3:K4':
+                sheet.unmerge_cells(str(items))
+
+        wb.save(path)
     
     def getDepartamentoEmp(self,emp):
         query = "SELECT a.area FROM postgres.public.empleado emp INNER JOIN postgres.public.area AS a ON emp.empleado_area_id  = a.id WHERE emp.id='"+emp+"' ORDER BY a.id"
