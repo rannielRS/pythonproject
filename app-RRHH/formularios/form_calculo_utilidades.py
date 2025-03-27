@@ -25,6 +25,7 @@ class FormularioCalcUtilidadesDesign():
         self.connLoc = CONN_LOC
         self.cursorLoc = CURSOR_LOC
         if self.getPeriodo():
+            validatecommand = panel_principal.register(self.is_valid_char)
             #variablesde estado
             self.registro_salario = False
             self.registro_vacaciones = False
@@ -40,7 +41,7 @@ class FormularioCalcUtilidadesDesign():
             self.lb_monto = tk.Label(panel_principal, font=('Times', 12), bg=COLOR_CUERPO_PRINCIPAL, text='Monto a distribuir:')
             self.lb_monto.place(x=750, y=400)
 
-            self.tx_distribuir = ttk.Entry(panel_principal, font=('Times', 14), width=13)
+            self.tx_distribuir = ttk.Entry(panel_principal, validate="key", validatecommand=(validatecommand, "%S"), font=('Times', 14), width=13)
             self.tx_distribuir.place(x=875, y=400) 
 
             self.btn_utilidades = tk.Button(panel_principal, text="Reporte de utilidades", font=(
@@ -189,6 +190,9 @@ class FormularioCalcUtilidadesDesign():
             tdestajo += dest['importe']
         #print(tdestajo)
         return tdestajo
+
+    def is_valid_char(self,char):
+        return char in "0123456789."
 
     def cargarEmpCB(self):
         options=[]         

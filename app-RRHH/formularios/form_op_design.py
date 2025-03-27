@@ -84,11 +84,12 @@ class FormularioOtrosPagosDesign():
             self.cb_periodo_op = ttk.Combobox(panel_principal, postcommand=self.cargarPeriodoOP, width=12)
             #self.cb_periodo.current(0)
             self.cb_periodo_op.place(x=808, y=200) 
-
-            self.tx_monto_op = ttk.Entry(panel_principal, font=('Times', 14), width=10, textvariable=self.monto_str)
+            validatecommand = panel_principal.register(self.is_valid_char)
+            self.tx_monto_op = ttk.Entry(panel_principal, validate="key", validatecommand=(validatecommand, "%S"),font=('Times', 14), width=10, textvariable=self.monto_str)
             #self.cb_periodo.current(0)
             self.tx_monto_op.place(x=808, y=251)
       
+            
             
 
             #Treeview        
@@ -127,6 +128,10 @@ class FormularioOtrosPagosDesign():
         style = ttk.Style()
         style.configure('TCombobox',(0,0,width,0))
 
+    def is_valid_char(self,char):
+        return char in "0123456789.-"
+
+        
     #Listado de otros pagos
     def listOP(self, emp='', peri=''):
         if peri:
@@ -155,7 +160,7 @@ class FormularioOtrosPagosDesign():
         self.cb_periodo_op['value']=options
 
     #Definiendo tree view de periodo
-    def registrarOP(self):       
+    def registrarOP(self):      
         if self.empSelec:
             idTPSelected = self.cb_tp_op.get().split('-')[0]
             idPeriodo = self.cb_periodo_op.get().split('-')[0]
@@ -173,6 +178,7 @@ class FormularioOtrosPagosDesign():
                 self.lb_sempleado_op['text']='Empleado seleccionado'
             else:
                 messagebox.showinfo('Campos vacíos','Existen campos vacíos, debe completarlos')
+                self.lb_sempleado_op['text']='Empleado seleccionado'
         else:            
             messagebox.showinfo('Información','Debe seleccionar un trabajador')
         self.actualizartreeEOP()
@@ -191,6 +197,10 @@ class FormularioOtrosPagosDesign():
                 cantP = len(self.listOP(selectedItem['values'][0]))
                 if cantOPEmpbefore == cantP:
                     messagebox.showinfo('Sin acción','No existen registros para la información suministrada')
+                    self.cb_periodo_op.set('')
+                    self.cb_tp_op.set('')
+                    self.monto_str.set('')
+                    self.lb_sempleado_op['text']='Empleado seleccionado'
                     #self.treeEOP.set(self.empSelec, column='opagos', value=self.cb_tp_op.get())  
                 else:
                     messagebox.showinfo('Confirmación','La información se eliminó correctamente') 
@@ -200,6 +210,7 @@ class FormularioOtrosPagosDesign():
                     self.lb_sempleado_op['text']='Empleado seleccionado'
             else:
                 messagebox.showinfo('Campos vacíos','Existen campos vacíos, debe completarlos')
+                self.lb_sempleado_op['text']='Empleado seleccionado'
         else:            
             messagebox.showinfo('Información','Debe seleccionar un trabajador')
         self.actualizartreeEOP()

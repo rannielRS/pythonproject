@@ -9,7 +9,7 @@ import os
 import subprocess
 import tkinter.font as tkfont
 from openpyxl.styles import Font, colors, fills, Alignment, PatternFill, NamedStyle
-from copy import copy
+import lib.dbf.dbf as dbf
 
 
 
@@ -25,7 +25,7 @@ class FormularioCalcImpDesign():
         self.cursorZun = CURSOR_ZUN
 
         if self.getPeriodo():
-            
+            validatecommand = panel_principal.register(self.is_valid_char)
             # Definiendo controles de seleccion
             self.empSelec = ''
             self.tx_empleado_calceco = ttk.Entry(panel_principal, font=('Times', 14), width=10)
@@ -72,7 +72,7 @@ class FormularioCalcImpDesign():
             self.lb_list_emp.grid_propagate(False)
 
             #Descuento
-            self.textoComentInv_calceco=ttk.Entry(self.lb_frame_calceco, font=('Times', 11), width=10, textvariable=self.db_rm_str)
+            self.textoComentInv_calceco=ttk.Entry(self.lb_frame_calceco, validate="key", validatecommand=(validatecommand, "%S"), font=('Times', 11), width=10, textvariable=self.db_rm_str)
             #self.textoComentInv_calceco.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
             self.textoComentInv_calceco.grid(row=1,column=1, padx=5, pady=5)
             self.textoComentInv_calceco.grid_propagate(False)
@@ -178,7 +178,8 @@ class FormularioCalcImpDesign():
         else:
             messagebox.showinfo('Información','Debe seleccionar el trabajador')
         
-
+    def is_valid_char(self,char):
+        return char in "0123456789."
 
     def addInv(self):
         idemp = self.cb_emp_ninterno.get()
@@ -1130,8 +1131,27 @@ class FormularioCalcImpDesign():
 
 
     #Mostrar reportes de otros pagos    
-    def expDBF(self):                
-        pass
+    def expDBF(self): 
+        
+        queryemp = 'SELECT x.id FROM postgres.public.empleado x order by x.empleado_area_id asc'
+        self.cursorLoc.execute(queryemp)
+        listemp = self.cursorLoc.fetchall()   
+        nomina_banco = dbf.Table('file/acreeditacion.dbf', 'COD_TIPID C(2); COD_PAEXID C(3); NUM_IDEPER C(15); CTA_MNAC C(16); IMPORTE_N N(16,2); CTA_MLC C(16); IMPORTE_D N(16,2)')
+        nomina_banco.open(dbf.READ_WRITE)
+        for e in listemp:
+            nomina_banco.append({'COD_TIPID':self.getdatabanco(e[0])['identif_banco'], 'COD_PAEXID': '247', 'NUM_IDEPER': self.getdatabanco(e[0])['no_expediente'], 'CTA_MNAC': self.getdatabanco(e[0])['cuenta_tm_cup'], 'IMPORTE_N': self.getNetSal(e[0])})
+
+    def getNetSal(self,emp):
+        querySalNeto = "SELECT up.neto_cobrar FROM postgres.public.utilidades_printhist AS up WHERE up.codigo_empleado = '"+str(emp)+"' AND up.name_utilidad='"+self.getUtiliDist()[1]+"_"+str(self.getUtiliDist()[3])+"'"
+        self.cursorLoc.execute(querySalNeto)
+        return self.cursorLoc.fetchone()[0]
+
+    def getdatabanco(self,emp):
+        querybanco = "SELECT ppt.identif_banco,emp.no_expediente,ppt.cuenta_tm_cup FROM ZUNpr.dbo.p_pagos_tm AS ppt INNER JOIN ZUNpr.dbo.p_empleado AS emp ON ppt.no_interno = emp.no_interno WHERE emp.no_interno = '"+str(emp)+"'"
+        self.cursorZun.execute(querybanco)
+        return self.cursorZun.fetchone()
+        
+
 
     
     def getpagoSalMT(self, empleado):
