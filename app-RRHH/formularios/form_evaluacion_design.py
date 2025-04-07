@@ -228,19 +228,19 @@ class FormularioEvaluacionDesign():
                         WHERE evaluacion_empleado_id = "+listTree[0]+" and evaluacion_perio_id = "+str(slistP[0][0])
                 else:
                     queryInEvaM1="INSERT INTO postgres.public.evaluacion (evaluacion_empleado_id,evaluacion_tipoevaluacion_id,evaluacion_perio_id) \
-                            VALUES ("+listTree[0]+","+str(self.obtenerTipoEva(listTree[4])[0][0])+","+str(slistP[0][0])+")"
+                            VALUES ("+listTree[0]+","+str(self.obtenerTipoEva(listTree[4])[0])+","+str(slistP[0][0])+")"
                 if evames2 is not None:
                     queryInEvaM2 = "UPDATE postgres.public.evaluacion SET evaluacion_tipoevaluacion_id = "+str(self.obtenerTipoEva(listTree[5])[0])+" \
                         WHERE evaluacion_empleado_id = "+listTree[0]+" and evaluacion_perio_id = "+str(slistP[1][0])
                 else:
                     queryInEvaM2="INSERT INTO postgres.public.evaluacion (evaluacion_empleado_id,evaluacion_tipoevaluacion_id,evaluacion_perio_id) \
-                            VALUES ("+listTree[0]+","+str(self.obtenerTipoEva(listTree[5])[0][0])+","+str(slistP[1][0])+")"
+                            VALUES ("+listTree[0]+","+str(self.obtenerTipoEva(listTree[5])[0])+","+str(slistP[1][0])+")"
                 if evames3 is not None:
                     queryInEvaM3 = "UPDATE postgres.public.evaluacion SET evaluacion_tipoevaluacion_id = "+str(self.obtenerTipoEva(listTree[6])[0])+" \
                         WHERE evaluacion_empleado_id = "+listTree[0]+" and evaluacion_perio_id = "+str(slistP[2][0])
                 else:            
                     queryInEvaM3="INSERT INTO postgres.public.evaluacion (evaluacion_empleado_id,evaluacion_tipoevaluacion_id,evaluacion_perio_id) \
-                            VALUES ("+listTree[0]+","+str(self.obtenerTipoEva(listTree[6])[0][0])+","+str(slistP[2][0])+")"
+                            VALUES ("+listTree[0]+","+str(self.obtenerTipoEva(listTree[6])[0])+","+str(slistP[2][0])+")"
                 self.cursorLoc.execute(queryInEvaM1)
                 self.cursorLoc.execute(queryInEvaM2)
                 self.cursorLoc.execute(queryInEvaM3)
